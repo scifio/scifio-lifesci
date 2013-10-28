@@ -8,7 +8,7 @@
     <version>1.96</version>
   </parent>
 
-  <groupId>io.scif.lifesci</groupId>
+  <groupId>io.scif</groupId>
   <artifactId>pom-scifio-lifesci</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
