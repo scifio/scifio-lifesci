@@ -270,6 +270,7 @@ public class SDTFormat extends AbstractFormat {
 
 			boolean direct = !m.mergeIntensity();
 			byte[] b = direct ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+			plane.setData(b);
 			getStream().seek(
 				m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
 					m.getTimeBins());
