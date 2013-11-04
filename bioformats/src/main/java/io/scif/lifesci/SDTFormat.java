@@ -154,10 +154,6 @@ public class SDTFormat extends AbstractFormat {
 
 			iMeta.setPixelType(FormatTools.UINT16);
 
-			if (mergeIntensity() && iMeta.getAxisLength(Axes.CHANNEL) > 1) {
-				iMeta.setPlanarAxisCount(iMeta.getPlanarAxisCount() + 1);
-			}
-
 			iMeta.setLittleEndian(true);
 			iMeta.setIndexed(false);
 			iMeta.setFalseColor(false);
@@ -254,12 +250,6 @@ public class SDTFormat extends AbstractFormat {
 			int bpp = FormatTools.getBytesPerPixel(m.get(imageIndex).getPixelType());
 			boolean little = m.get(imageIndex).isLittleEndian();
 
-			// HACK
-			// adjust the number of time bins if DimensionSwapper was used
-			if (buf.length == sizeY * sizeX * bpp && m.getTimeBins() > 1) {
-				m.setTimeBins(1);
-			}
-
 			int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
 			int planeSize = paddedWidth * sizeY * m.getTimeBins() * bpp;
 
@@ -270,7 +260,6 @@ public class SDTFormat extends AbstractFormat {
 
 			boolean direct = !m.mergeIntensity();
 			byte[] b = direct ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
-			plane.setData(b);
 			getStream().seek(
 				m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
 					m.getTimeBins());
@@ -282,28 +271,25 @@ public class SDTFormat extends AbstractFormat {
 				getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 			}
 
-			if (direct) return plane; // no cropping required
-
-			int scan = m.mergeIntensity() ? bpp : m.getTimeBins() * bpp;
+			// no cropping required
+			if (direct) {
+				plane.setData(b);
+				return plane;
+			}
 
 			for (int row = 0; row < h; row++) {
 				int yi = (y + row) * sizeX * m.getTimeBins() * bpp;
-				int ri = row * w * scan;
+				int ri = row * w * bpp;
 				for (int col = 0; col < w; col++) {
 					int xi = yi + (x + col) * m.getTimeBins() * bpp;
-					int ci = ri + col * scan;
-					if (m.mergeIntensity()) {
-						// combine all lifetime bins into single intensity value
-						short sum = 0;
-						for (int t = 0; t < m.getTimeBins(); t++) {
-							sum += DataTools.bytesToShort(b, xi + t * bpp, little);
-						}
-						DataTools.unpackBytes(sum, buf, ci, 2, little);
+					int ci = ri + col * bpp;
+					// combine all lifetime bins into single intensity value
+					short sum = 0;
+					for (int t = 0; t < m.getTimeBins(); t++) {
+						sum += DataTools.bytesToShort(b, xi + t * bpp, little);
 					}
-					else {
-						// each lifetime bin is a separate interleaved "channel"
-						System.arraycopy(b, xi, buf, ci, scan);
-					}
+					DataTools.unpackBytes(sum, buf, ci, 2, little);
+
 				}
 			}
 			return plane;
