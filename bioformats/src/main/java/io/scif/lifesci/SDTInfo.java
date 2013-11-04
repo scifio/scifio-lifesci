@@ -27,6 +27,7 @@ package io.scif.lifesci;
 
 import io.scif.MetaTable;
 import io.scif.common.Constants;
+import io.scif.io.RandomAccessInputStream;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -812,14 +813,7 @@ public class SDTInfo {
 
     stream.seek(dataBlockOffs);
 
-    // read BHFileBlockHeader
-    blockNo = stream.readShort();
-    dataOffs = stream.readInt();
-    nextBlockOffs = stream.readInt();
-    blockType = stream.readUnsignedShort();
-    measDescBlockNo = stream.readShort();
-    lblockNo = (0xffffffffL & stream.readInt()); // unsigned
-    blockLength = (0xffffffffL & stream.readInt()); // unsigned
+    readBlockHeader(stream);
 
     // save BHFileBlockHeader to metadata table
     if (meta != null) {
@@ -834,6 +828,34 @@ public class SDTInfo {
       meta.put(bhFileBlockHeader + "lblockNo", new Long(lblockNo));
       meta.put(bhFileBlockHeader + "blockLength", new Long(blockLength));
     }
+  }
+
+  /**
+   * Convenience method for reading from a block header section of an SDT header
+   * stream. Updates this SDTInfo object based on the read information. Fields
+   * updated are:
+   * <ul>
+   * <li>{@link #blockNo}</li>
+   * <li>{@link #dataOffs}</li>
+   * <li>{@link #nextBlockOffs}</li>
+   * <li>{@link #blockType}</li>
+   * <li>{@link #measDescBlockNo}</li>
+   * <li>{@link #lblockNo}</li>
+   * <li>{@link #blockLength}</li>
+   * </ul>
+   * 
+   * @param stream - stream to read from
+   * @throws IOException
+   */
+  public void readBlockHeader(RandomAccessInputStream stream) throws IOException {
+    // read BHFileBlockHeader
+    blockNo = stream.readShort();
+    dataOffs = stream.readInt();
+    nextBlockOffs = stream.readInt();
+    blockType = stream.readUnsignedShort();
+    measDescBlockNo = stream.readShort();
+    lblockNo = (0xffffffffL & stream.readInt()); // unsigned
+    blockLength = (0xffffffffL & stream.readInt()); // unsigned
   }
 
 }
