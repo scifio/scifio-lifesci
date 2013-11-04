@@ -142,15 +142,13 @@ public class SDTFormat extends AbstractFormat {
 			createImageMetadata(1);
 
 			ImageMetadata iMeta = get(0);
-
 			if (!mergeIntensity()) {
 				iMeta.addAxis(SCIFIOAxes.LIFETIME, getSDTInfo().timeBins);
 				iMeta.setPlanarAxisCount(3);
 			}
-
 			iMeta.addAxis(Axes.X, getSDTInfo().width);
 			iMeta.addAxis(Axes.Y, getSDTInfo().height);
-			iMeta.addAxis(Axes.CHANNEL, channels);
+			iMeta.addAxis(SCIFIOAxes.SPECTRA, channels);
 
 			iMeta.setPixelType(FormatTools.UINT16);
 
@@ -258,22 +256,51 @@ public class SDTFormat extends AbstractFormat {
 				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.X)], h =
 				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.Y)];
 
-			boolean direct = !m.mergeIntensity();
-			byte[] b = direct ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+			boolean merge = m.mergeIntensity();
+			// Csarseven data has to read the entire image, so we may need to crop out
+			// the undesired region
+			boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
+			byte[] b =
+				!merge && !crop ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
 			getStream().seek(
 				m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
 					m.getTimeBins());
 
-			for (int row = 0; row < h; row++) {
-				getStream().skipBytes(x * bpp * m.getTimeBins());
-				getStream().read(b, row * bpp * m.getTimeBins() * w,
-					w * m.getTimeBins() * bpp);
-				getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+			SDTInfo info = m.getSDTInfo();
+
+			// HACK - Csarseven support
+			if (info.noOfDataBlocks > 1) {
+				int tmpOff = info.dataBlockOffs;
+				// Data is stored by row, bottom row first
+				for (int row = h - 1; row >= 0; row--) {
+					for (int col = 0; col < w; col++) {
+						getStream().seek(tmpOff);
+						info.readBlockHeader(getStream());
+						// Skip to the desired plane (channel)
+						getStream().skip(planeIndex * m.getTimeBins() * bpp);
+						getStream().read(b, ((row * w) + col) * m.getTimeBins() * bpp,
+							m.getTimeBins() * bpp);
+						tmpOff = info.nextBlockOffs;
+					}
+				}
+				if (crop) {
+					for (int row = 0; row < h; row++) {
+						System.arraycopy(b, ((row * sizeX) + x) * bpp * m.getTimeBins(),
+							buf, row * w * bpp * m.getTimeBins(), w * m.getTimeBins() * bpp);
+					}
+				}
+			}
+			else {
+				for (int row = 0; row < h; row++) {
+					getStream().skipBytes(x * bpp * m.getTimeBins());
+					getStream().read(b, row * bpp * m.getTimeBins() * w,
+						w * m.getTimeBins() * bpp);
+					getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				}
 			}
 
-			// no cropping required
-			if (direct) {
-				plane.setData(b);
+			// no pixel merging required
+			if (!merge) {
 				return plane;
 			}
 
@@ -294,6 +321,5 @@ public class SDTFormat extends AbstractFormat {
 			}
 			return plane;
 		}
-
 	}
 }
