@@ -77,7 +77,9 @@ public class SDTInfo {
   public static final String X_STRING = "#SP [SP_SCAN_X,I,";
   public static final String Y_STRING = "#SP [SP_SCAN_Y,I,";
   public static final String T_STRING = "#SP [SP_ADC_RE,I,";
-  public static final String C_STRING = "#SP [SP_SCAN_RX,I,";
+  public static final String C_STRING1 = "#SP [SP_SCAN_RX,I,";
+  public static final String C_STRING2 = "#SP [SP_SCAN_RY,I,";
+
 
   // -- Fields --
 
@@ -527,10 +529,15 @@ public class SDTInfo {
         int end = token.indexOf("]", ndx);
         timeBins = Integer.parseInt(token.substring(ndx, end));
       }
-      else if (token.indexOf(C_STRING) != -1) {
-        int ndx = token.indexOf(C_STRING) + C_STRING.length();
+      else if (token.indexOf(C_STRING1) != -1) {
+        int ndx = token.indexOf(C_STRING1) + C_STRING1.length();
         int end = token.indexOf("]", ndx);
-        channels = Integer.parseInt(token.substring(ndx, end));
+        channels += Integer.parseInt(token.substring(ndx, end));
+      }
+      else if (token.indexOf(C_STRING2) != -1) {
+        int ndx = token.indexOf(C_STRING2) + C_STRING2.length();
+        int end = token.indexOf("]", ndx);
+        channels += Integer.parseInt(token.substring(ndx, end));
       }
     }
 
