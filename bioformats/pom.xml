@@ -18,6 +18,24 @@
     <project.rootdir>${project.parent.basedir}</project.rootdir>
   </properties>
 
+  <dependencies>
+    <dependency>
+      <groupId>${scijava-common.groupId}</groupId>
+      <artifactId>scijava-common</artifactId>
+      <version>${scijava-common.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>ome-formats</artifactId>
+      <version>${ome-formats.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>scifio</artifactId>
+      <version>${scifio.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
