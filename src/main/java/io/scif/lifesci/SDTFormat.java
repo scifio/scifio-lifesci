@@ -72,6 +72,10 @@ public class SDTFormat extends AbstractFormat {
 	 */
 	public static class Metadata extends AbstractMetadata {
 
+		// -- Constants --
+
+		public static final String CNAME = "io.scif.lifesci.SDTFormat$Metadata";
+
 		// -- Fields --
 
 		/** Object containing SDT header information. */
