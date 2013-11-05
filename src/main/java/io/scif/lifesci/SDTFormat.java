@@ -48,7 +48,8 @@ import org.scijava.plugin.Plugin;
  * SDTReader is the file format reader for Becker &amp; Hickl SPC-Image SDT
  * files.
  * 
- * @author Curtis Rueden ctrueden at wisc.edu
+ * @author Curtis Rueden
+ * @author Mark Hiner
  */
 @Plugin(type = Format.class)
 public class SDTFormat extends AbstractFormat {
