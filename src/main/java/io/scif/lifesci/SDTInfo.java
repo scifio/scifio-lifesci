@@ -47,6 +47,8 @@ public class SDTInfo {
 	public static final short BH_HEADER_NOT_VALID = 0x1111;
 	public static final short BH_HEADER_VALID = 0x5555;
 
+	public static final int FIFO_IMAGE_MODE = 13;
+
 	/** For .set files (setup only). */
 	public static final String SETUP_IDENTIFIER = "SPC Setup Script File";
 
@@ -813,6 +815,13 @@ public class SDTInfo {
 			meta.put(bhFileBlockHeader + "lblockNo", new Long(lblockNo));
 			meta.put(bhFileBlockHeader + "blockLength", new Long(blockLength));
 		}
+
+		// similar logic to TRI2, to "account for SPC-152 type images"
+		if (FIFO_IMAGE_MODE == measMode) {
+			if (imageX > 0) width = imageX;
+			if (imageY > 0) height = imageY;
+			if (imageRX > 0) channels = imageRX;
+		}	
 	}
 
 	/**
