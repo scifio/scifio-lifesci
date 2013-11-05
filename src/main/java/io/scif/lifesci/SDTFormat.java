@@ -1,6 +1,6 @@
 /*
  * #%L
- * SCIFIO Proprietary Formats
+ * SCIFIO Life Sciences Extension
  * %%
  * Copyright (C) 2013 Open Microscopy Environment:
  *   - Board of Regents of the University of Wisconsin-Madison
