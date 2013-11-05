@@ -10,7 +10,7 @@
 
   <groupId>io.scif</groupId>
   <artifactId>scifio-lifesci</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.2-SNAPSHOT</version>
 
   <name>SCIFIO Life Sciences Extension</name>
   <description>Provides SCIFIO support for proprietary life science formats.
