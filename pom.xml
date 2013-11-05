@@ -9,9 +9,8 @@
   </parent>
 
   <groupId>io.scif</groupId>
-  <artifactId>pom-scifio-lifesci</artifactId>
+  <artifactId>scifio-lifesci</artifactId>
   <version>0.1.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
 
   <name>SCIFIO Life Sciences Extension</name>
   <description>Provides SCIFIO support for proprietary life science formats.
@@ -19,14 +18,26 @@
   <url>http://scif.io/</url>
   <inceptionYear>2013</inceptionYear>
 
-  <modules>
-    <module>bioformats</module>
-  </modules>
-
   <properties>
     <project.rootdir>${basedir}</project.rootdir>
   </properties>
-
+  <dependencies>
+    <dependency>
+      <groupId>${scijava-common.groupId}</groupId>
+      <artifactId>scijava-common</artifactId>
+      <version>${scijava-common.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>ome-formats</artifactId>
+      <version>${ome-formats.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>scifio</artifactId>
+      <version>${scifio.version}</version>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
       <plugin>
