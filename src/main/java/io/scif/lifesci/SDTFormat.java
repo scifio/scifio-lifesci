@@ -264,9 +264,8 @@ public class SDTFormat extends AbstractFormat {
 			boolean merge = m.mergeIntensity();
 			// Csarseven data has to read the entire image, so we may need to crop out
 			// the undesired region
-			boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
 			byte[] b =
-				!merge && !crop ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+				!merge ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
 
 			SDTInfo info = m.getSDTInfo();
 
@@ -290,9 +289,14 @@ public class SDTFormat extends AbstractFormat {
 			// Csarseven support
 			else if (info.noOfDataBlocks > 1) {
 				int tmpOff = info.dataBlockOffs;
+				boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
+				if (crop && !merge) {
+					b = new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+				}
 				// Data is stored by row, bottom row first
 				for (int row = h - 1; row >= 0; row--) {
 					for (int col = 0; col < w; col++) {
+
 						getStream().seek(tmpOff);
 						info.readBlockHeader(getStream());
 						// Skip to the desired plane (channel)
