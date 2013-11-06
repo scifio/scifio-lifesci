@@ -267,14 +267,28 @@ public class SDTFormat extends AbstractFormat {
 			boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
 			byte[] b =
 				!merge && !crop ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
-			getStream().seek(
-				m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
-					m.getTimeBins());
 
 			SDTInfo info = m.getSDTInfo();
 
-			// HACK - Csarseven support
-			if (info.noOfDataBlocks > 1) {
+			// FIFO support
+			if (info.measMode == 13) {
+				int tmpOff = info.dataBlockOffs;
+				getStream().seek(tmpOff);
+				info.readBlockHeader(getStream());
+				int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
+				int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
+				// Seek to the data block for this plane index
+				for (int i = 0; i < blockIndex; i++) {
+					tmpOff = info.nextBlockOffs;
+					getStream().seek(tmpOff);
+					info.readBlockHeader(getStream());
+				}
+				// Skip to the requested plane and row
+				getStream().skip(
+					channelIndex * planeSize + y * paddedWidth * bpp * m.getTimeBins());
+			}
+			// Csarseven support
+			else if (info.noOfDataBlocks > 1) {
 				int tmpOff = info.dataBlockOffs;
 				// Data is stored by row, bottom row first
 				for (int row = h - 1; row >= 0; row--) {
@@ -282,6 +296,7 @@ public class SDTFormat extends AbstractFormat {
 						getStream().seek(tmpOff);
 						info.readBlockHeader(getStream());
 						// Skip to the desired plane (channel)
+						// Assuming channels are interleaved
 						getStream().skip(planeIndex * m.getTimeBins() * bpp);
 						getStream().read(b, ((row * w) + col) * m.getTimeBins() * bpp,
 							m.getTimeBins() * bpp);
@@ -295,12 +310,22 @@ public class SDTFormat extends AbstractFormat {
 					}
 				}
 			}
+			// Standard offset
 			else {
+				getStream().seek(
+					m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
+						m.getTimeBins());
+			}
+
+			// Read the data block
+			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
+				int numBytesRemaining = info.dataBlockLength;
 				for (int row = 0; row < h; row++) {
-					getStream().skipBytes(x * bpp * m.getTimeBins());
-					getStream().read(b, row * bpp * m.getTimeBins() * w,
-						w * m.getTimeBins() * bpp);
-					getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+					skipBytes(info, x * bpp * m.getTimeBins(), numBytesRemaining);
+					readBytes(info, b, row * bpp * m.getTimeBins() * w, w *
+						m.getTimeBins() * bpp, numBytesRemaining);
+					skipBytes(info, bpp * m.getTimeBins() * (paddedWidth - x - w),
+						numBytesRemaining);
 				}
 			}
 
@@ -325,6 +350,55 @@ public class SDTFormat extends AbstractFormat {
 				}
 			}
 			return plane;
+		}
+
+		private void skipBytes(SDTInfo info, int numBytes, int numBytesRemaining)
+			throws IOException
+		{
+			// loop over multiple blocks, if required
+			while (numBytes > 0) {
+				// all bytes are in current data block?
+				if (numBytes <= numBytesRemaining) {
+					getStream().skipBytes(numBytes);
+					numBytesRemaining -= numBytes;
+					return;
+				}
+				// skip what we have in current data block
+				if (numBytesRemaining > 0) {
+					getStream().skipBytes(numBytesRemaining);
+					numBytes -= numBytesRemaining;
+				}
+				// read next block, if required
+				if (numBytes > 0) {
+					info.readBlockHeader(getStream());
+					numBytesRemaining = info.dataBlockLength;
+				}
+			}
+		}
+
+		private void readBytes(SDTInfo info, byte[] buffer, int offset,
+			int numBytes, int numBytesRemaining) throws IOException
+		{
+			// loop over multiple blocks, if required
+			while (numBytes > 0) {
+				// all bytes are in current data block?
+				if (numBytes <= numBytesRemaining) {
+					getStream().read(buffer, offset, numBytes);
+					numBytesRemaining -= numBytes;
+					return;
+				}
+				if (numBytesRemaining > 0) {
+					// read what we have in current data block
+					getStream().read(buffer, offset, numBytesRemaining);
+					numBytes -= numBytesRemaining;
+					offset += numBytesRemaining;
+				}
+				// read next block, if required
+				if (numBytes > 0) {
+					info.readBlockHeader(getStream());
+					numBytesRemaining = info.dataBlockLength;
+				}
+			}
 		}
 	}
 }

@@ -521,12 +521,14 @@ public class SDTInfo {
 			else if (token.indexOf(C_STRING1) != -1) {
 				int ndx = token.indexOf(C_STRING1) + C_STRING1.length();
 				int end = token.indexOf("]", ndx);
-				channels += Integer.parseInt(token.substring(ndx, end));
+				channels =
+					nonZeroProduct(channels, Integer.parseInt(token.substring(ndx, end)));
 			}
 			else if (token.indexOf(C_STRING2) != -1) {
 				int ndx = token.indexOf(C_STRING2) + C_STRING2.length();
 				int end = token.indexOf("]", ndx);
-				channels += Integer.parseInt(token.substring(ndx, end));
+				channels =
+					nonZeroProduct(channels, Integer.parseInt(token.substring(ndx, end)));
 			}
 		}
 
@@ -671,7 +673,9 @@ public class SDTInfo {
 				if (scanX > 0) width = scanX;
 				if (scanY > 0) height = scanY;
 				if (adcRE > 0) timeBins = adcRE;
-				if (scanRX > 0) channels = scanRX;
+				if (scanRX > 0 || scanRY > 0) {
+					channels = nonZeroProduct(scanRX, scanRY);
+				}
 			}
 
 			if (hasMeasStopInfo) {
@@ -820,8 +824,11 @@ public class SDTInfo {
 		if (FIFO_IMAGE_MODE == measMode) {
 			if (imageX > 0) width = imageX;
 			if (imageY > 0) height = imageY;
-			if (imageRX > 0) channels = imageRX;
-		}	
+			if (imageRX > 0 || imageRY > 0) {
+				channels = nonZeroProduct(scanRX, scanRY);
+			}
+			channels *= noOfDataBlocks;
+		}
 	}
 
 	/**
@@ -854,4 +861,13 @@ public class SDTInfo {
 		blockLength = (0xffffffffL & stream.readInt()); // unsigned
 	}
 
+	// -- Helper methods --
+
+	private int nonZeroProduct(int... args) {
+		int product = 1;
+		for (int arg : args) {
+			if (arg > 0) product *= arg;
+		}
+		return product;
+	}
 }
