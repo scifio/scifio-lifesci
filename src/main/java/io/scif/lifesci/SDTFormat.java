@@ -323,13 +323,11 @@ public class SDTFormat extends AbstractFormat {
 
 			// Read the data block
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
-				int numBytesRemaining = info.dataBlockLength;
 				for (int row = 0; row < h; row++) {
-					skipBytes(info, x * bpp * m.getTimeBins(), numBytesRemaining);
-					readBytes(info, b, row * bpp * m.getTimeBins() * w, w *
-						m.getTimeBins() * bpp, numBytesRemaining);
-					skipBytes(info, bpp * m.getTimeBins() * (paddedWidth - x - w),
-						numBytesRemaining);
+					getStream().skipBytes(x * bpp * m.getTimeBins());
+					getStream().read(b, row * bpp * m.getTimeBins() * w, w *
+						m.getTimeBins() * bpp);
+					getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 				}
 			}
 
@@ -354,55 +352,6 @@ public class SDTFormat extends AbstractFormat {
 				}
 			}
 			return plane;
-		}
-
-		private void skipBytes(SDTInfo info, int numBytes, int numBytesRemaining)
-			throws IOException
-		{
-			// loop over multiple blocks, if required
-			while (numBytes > 0) {
-				// all bytes are in current data block?
-				if (numBytes <= numBytesRemaining) {
-					getStream().skipBytes(numBytes);
-					numBytesRemaining -= numBytes;
-					return;
-				}
-				// skip what we have in current data block
-				if (numBytesRemaining > 0) {
-					getStream().skipBytes(numBytesRemaining);
-					numBytes -= numBytesRemaining;
-				}
-				// read next block, if required
-				if (numBytes > 0) {
-					info.readBlockHeader(getStream());
-					numBytesRemaining = info.dataBlockLength;
-				}
-			}
-		}
-
-		private void readBytes(SDTInfo info, byte[] buffer, int offset,
-			int numBytes, int numBytesRemaining) throws IOException
-		{
-			// loop over multiple blocks, if required
-			while (numBytes > 0) {
-				// all bytes are in current data block?
-				if (numBytes <= numBytesRemaining) {
-					getStream().read(buffer, offset, numBytes);
-					numBytesRemaining -= numBytes;
-					return;
-				}
-				if (numBytesRemaining > 0) {
-					// read what we have in current data block
-					getStream().read(buffer, offset, numBytesRemaining);
-					numBytes -= numBytesRemaining;
-					offset += numBytesRemaining;
-				}
-				// read next block, if required
-				if (numBytes > 0) {
-					info.readBlockHeader(getStream());
-					numBytesRemaining = info.dataBlockLength;
-				}
-			}
 		}
 	}
 }
