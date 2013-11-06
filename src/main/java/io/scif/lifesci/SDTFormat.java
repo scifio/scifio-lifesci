@@ -271,9 +271,13 @@ public class SDTFormat extends AbstractFormat {
 
 			// FIFO support
 			if (info.measMode == 13) {
+				// Contains multiple data blocks. Each data block contains one or more
+				// complete planes. Planes are assumed to be stored as they would be
+				// for single block datasets.
 				int tmpOff = info.dataBlockOffs;
 				getStream().seek(tmpOff);
 				info.readBlockHeader(getStream());
+				// Compute channel + block indices from the requested plane index.
 				int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
 				int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
 				// Seek to the data block for this plane index
@@ -282,7 +286,7 @@ public class SDTFormat extends AbstractFormat {
 					getStream().seek(tmpOff);
 					info.readBlockHeader(getStream());
 				}
-				// Skip to the requested plane and row
+				// Skip to the requested plane and row offset
 				getStream().skip(
 					channelIndex * planeSize + y * paddedWidth * bpp * m.getTimeBins());
 			}
@@ -302,12 +306,17 @@ public class SDTFormat extends AbstractFormat {
 						// Skip to the desired plane (channel)
 						// Assuming channels are interleaved
 						getStream().skip(planeIndex * m.getTimeBins() * bpp);
+						// Reads the current data block. Each data block contains all
+						// the time bins for a single pixel position.
 						getStream().read(b, ((row * w) + col) * m.getTimeBins() * bpp,
 							m.getTimeBins() * bpp);
+						// Update offset to point to the next data block (pixel)
 						tmpOff = info.nextBlockOffs;
 					}
 				}
 				if (crop) {
+					// We always have to read the entire plane since we go from pixel to
+					// pixel, so now we can crop out what we didn't need.
 					for (int row = 0; row < h; row++) {
 						System.arraycopy(b, ((row * sizeX) + x) * bpp * m.getTimeBins(),
 							buf, row * w * bpp * m.getTimeBins(), w * m.getTimeBins() * bpp);
@@ -316,12 +325,15 @@ public class SDTFormat extends AbstractFormat {
 			}
 			// Standard offset
 			else {
+				// binOffset points to the start of the pixels, then we skip the
+				// required number of planes and rows.
 				getStream().seek(
 					m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
 						m.getTimeBins());
 			}
 
-			// Read the data block
+			// For the SDT subtypes with complete planes per data block, we can read
+			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
 				for (int row = 0; row < h; row++) {
 					getStream().skipBytes(x * bpp * m.getTimeBins());
