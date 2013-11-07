@@ -10,7 +10,7 @@
 
   <groupId>io.scif</groupId>
   <artifactId>scifio-lifesci</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.2.2</version>
 
   <name>SCIFIO Life Sciences Extension</name>
   <description>Provides SCIFIO support for proprietary life science formats.
@@ -144,7 +144,7 @@
   <scm>
     <connection>scm:git:git://github.com/scifio/ome-formats</connection>
     <developerConnection>scm:git:git@github.com:scifio/ome-formats</developerConnection>
-    <tag>HEAD</tag>
+    <tag>scifio-lifesci-0.2.2</tag>
     <url>http://github.com/scifio/ome-formats</url>
   </scm>
 
