@@ -19,10 +19,6 @@
 	<url>http://scif.io/</url>
 	<inceptionYear>2013</inceptionYear>
 
-	<properties>
-		<project.rootdir>${basedir}</project.rootdir>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>${scijava-common.groupId}</groupId>
