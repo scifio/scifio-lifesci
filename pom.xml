@@ -21,6 +21,7 @@
   <properties>
     <project.rootdir>${basedir}</project.rootdir>
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>${scijava-common.groupId}</groupId>
