@@ -360,7 +360,6 @@ public class SDTFormat extends AbstractFormat {
 						sum += DataTools.bytesToShort(b, xi + t * bpp, little);
 					}
 					DataTools.unpackBytes(sum, buf, ci, 2, little);
-
 				}
 			}
 			return plane;
