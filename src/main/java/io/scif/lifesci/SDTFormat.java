@@ -33,13 +33,13 @@ import io.scif.ByteArrayReader;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
+import io.scif.common.DataTools;
 import io.scif.img.axes.SCIFIOAxes;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
 
-import loci.common.DataTools;
 import net.imglib2.meta.Axes;
 
 import org.scijava.plugin.Plugin;
