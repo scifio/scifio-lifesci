@@ -417,8 +417,8 @@ public class SDTInfo {
 	 * Constructs a new SDT header by reading values from the given input source,
 	 * populating the given metadata table.
 	 */
-	public SDTInfo(io.scif.io.RandomAccessInputStream stream, MetaTable meta)
-		throws IOException
+	public SDTInfo(final io.scif.io.RandomAccessInputStream stream,
+		final MetaTable meta) throws IOException
 	{
 		// read bhfileHeader
 		revision = stream.readShort();
@@ -461,16 +461,16 @@ public class SDTInfo {
 
 		// read file info
 		stream.seek(infoOffs);
-		byte[] infoBytes = new byte[infoLength];
+		final byte[] infoBytes = new byte[infoLength];
 		stream.readFully(infoBytes);
 		info = new String(infoBytes, Constants.ENCODING);
 
 		StringTokenizer st = new StringTokenizer(info, "\n");
-		int count = st.countTokens();
+		final int count = st.countTokens();
 		st.nextToken();
 		String key = null, value = null;
 		for (int i = 1; i < count - 1; i++) {
-			String token = st.nextToken().trim();
+			final String token = st.nextToken().trim();
 			if (token.indexOf(":") == -1) continue;
 			key = token.substring(0, token.indexOf(":")).trim();
 			value = token.substring(token.indexOf(":") + 1).trim();
@@ -481,18 +481,18 @@ public class SDTInfo {
 
 		// read setup
 		stream.seek(setupOffs);
-		byte[] setupBytes = new byte[setupLength];
+		final byte[] setupBytes = new byte[setupLength];
 		stream.readFully(setupBytes);
 		setup = new String(setupBytes, Constants.ENCODING);
 
 		st = new StringTokenizer(setup, "\n");
 		while (st.hasMoreTokens()) {
-			String token = st.nextToken().trim();
+			final String token = st.nextToken().trim();
 
 			if (token.startsWith("#SP") || token.startsWith("#DI") ||
 				token.startsWith("#PR") || token.startsWith("#MP"))
 			{
-				int open = token.indexOf("[");
+				final int open = token.indexOf("[");
 				key = token.substring(open + 1, token.indexOf(",", open));
 				value = token.substring(token.lastIndexOf(",") + 1, token.length() - 1);
 			}
@@ -504,29 +504,29 @@ public class SDTInfo {
 			if (key != null && value != null && meta != null) meta.put(key, value);
 
 			if (token.indexOf(X_STRING) != -1) {
-				int ndx = token.indexOf(X_STRING) + X_STRING.length();
-				int end = token.indexOf("]", ndx);
+				final int ndx = token.indexOf(X_STRING) + X_STRING.length();
+				final int end = token.indexOf("]", ndx);
 				width = Integer.parseInt(token.substring(ndx, end));
 			}
 			else if (token.indexOf(Y_STRING) != -1) {
-				int ndx = token.indexOf(Y_STRING) + Y_STRING.length();
-				int end = token.indexOf("]", ndx);
+				final int ndx = token.indexOf(Y_STRING) + Y_STRING.length();
+				final int end = token.indexOf("]", ndx);
 				height = Integer.parseInt(token.substring(ndx, end));
 			}
 			else if (token.indexOf(T_STRING) != -1) {
-				int ndx = token.indexOf(T_STRING) + T_STRING.length();
-				int end = token.indexOf("]", ndx);
+				final int ndx = token.indexOf(T_STRING) + T_STRING.length();
+				final int end = token.indexOf("]", ndx);
 				timeBins = Integer.parseInt(token.substring(ndx, end));
 			}
 			else if (token.indexOf(C_STRING1) != -1) {
-				int ndx = token.indexOf(C_STRING1) + C_STRING1.length();
-				int end = token.indexOf("]", ndx);
+				final int ndx = token.indexOf(C_STRING1) + C_STRING1.length();
+				final int end = token.indexOf("]", ndx);
 				channels =
 					nonZeroProduct(channels, Integer.parseInt(token.substring(ndx, end)));
 			}
 			else if (token.indexOf(C_STRING2) != -1) {
-				int ndx = token.indexOf(C_STRING2) + C_STRING2.length();
-				int end = token.indexOf("]", ndx);
+				final int ndx = token.indexOf(C_STRING2) + C_STRING2.length();
+				final int end = token.indexOf("]", ndx);
 				channels =
 					nonZeroProduct(channels, Integer.parseInt(token.substring(ndx, end)));
 			}
@@ -848,7 +848,7 @@ public class SDTInfo {
 	 * @param stream - stream to read from
 	 * @throws IOException
 	 */
-	public void readBlockHeader(RandomAccessInputStream stream)
+	public void readBlockHeader(final RandomAccessInputStream stream)
 		throws IOException
 	{
 		// read BHFileBlockHeader
@@ -863,9 +863,9 @@ public class SDTInfo {
 
 	// -- Helper methods --
 
-	private int nonZeroProduct(int... args) {
+	private int nonZeroProduct(final int... args) {
 		int product = 1;
-		for (int arg : args) {
+		for (final int arg : args) {
 			if (arg > 0) product *= arg;
 		}
 		return product;

@@ -101,7 +101,7 @@ public class SDTFormat extends AbstractFormat {
 			return info;
 		}
 
-		public void setSDTInfo(SDTInfo info) {
+		public void setSDTInfo(final SDTInfo info) {
 			this.info = info;
 		}
 
@@ -109,7 +109,7 @@ public class SDTFormat extends AbstractFormat {
 			return binOffset;
 		}
 
-		public void setBinOffset(int binOffset) {
+		public void setBinOffset(final int binOffset) {
 			this.binOffset = binOffset;
 		}
 
@@ -117,7 +117,7 @@ public class SDTFormat extends AbstractFormat {
 			return timeBins;
 		}
 
-		public void setTimeBins(int timeBins) {
+		public void setTimeBins(final int timeBins) {
 			this.timeBins = timeBins;
 		}
 
@@ -125,7 +125,7 @@ public class SDTFormat extends AbstractFormat {
 			return channels;
 		}
 
-		public void setChannels(int channels) {
+		public void setChannels(final int channels) {
 			this.channels = channels;
 		}
 
@@ -133,7 +133,7 @@ public class SDTFormat extends AbstractFormat {
 			return mergeIntensity;
 		}
 
-		public void setMergeIntensity(boolean mergeIntensity) {
+		public void setMergeIntensity(final boolean mergeIntensity) {
 			if (mergeIntensity != this.mergeIntensity) {
 				this.mergeIntensity = mergeIntensity;
 				// re-populate imageMetadata
@@ -147,7 +147,7 @@ public class SDTFormat extends AbstractFormat {
 		public void populateImageMetadata() {
 			createImageMetadata(1);
 
-			ImageMetadata iMeta = get(0);
+			final ImageMetadata iMeta = get(0);
 			if (!mergeIntensity()) {
 				iMeta.addAxis(SCIFIOAxes.LIFETIME, getSDTInfo().timeBins);
 				iMeta.setPlanarAxisCount(3);
@@ -165,7 +165,7 @@ public class SDTFormat extends AbstractFormat {
 		}
 
 		@Override
-		public void close(boolean fileOnly) throws IOException {
+		public void close(final boolean fileOnly) throws IOException {
 			super.close(fileOnly);
 			if (!fileOnly) {
 				binOffset = timeBins = channels = 0;
@@ -198,22 +198,23 @@ public class SDTFormat extends AbstractFormat {
 		 * @param mergeIntensity - Whether or not lifetime bins should be combined
 		 *          to a single intensity plane.
 		 */
-		public void setMergeIntensity(boolean mergeIntensity) {
+		public void setMergeIntensity(final boolean mergeIntensity) {
 			this.mergeIntensity = mergeIntensity;
 		}
 
 		// -- Parser API methods --
 
 		@Override
-		protected void typedParse(RandomAccessInputStream stream, Metadata meta,
-			final SCIFIOConfig config) throws IOException, FormatException
+		protected void typedParse(final RandomAccessInputStream stream,
+			final Metadata meta, final SCIFIOConfig config) throws IOException,
+			FormatException
 		{
 			stream.order(true);
 
 			log().info("Reading SDT header");
 
 			// read file header information
-			SDTInfo info = new SDTInfo(stream, meta.getTable());
+			final SDTInfo info = new SDTInfo(stream, meta.getTable());
 			meta.setSDTInfo(info);
 			meta.setBinOffset(info.dataBlockOffs + 22);
 			meta.setTimeBins(info.timeBins);
@@ -231,7 +232,7 @@ public class SDTFormat extends AbstractFormat {
 	 */
 	public static class Reader extends ByteArrayReader<Metadata> {
 
-		// -- AbstractReader Methods  --
+		// -- AbstractReader Methods --
 
 		@Override
 		protected String[] createDomainArray() {
@@ -241,35 +242,36 @@ public class SDTFormat extends AbstractFormat {
 		// -- Reader API Methods --
 
 		@Override
-		public ByteArrayPlane openPlane(int imageIndex, long planeIndex,
-			ByteArrayPlane plane, long[] planeMin, long[] planeMax,
-			final SCIFIOConfig config) throws FormatException, IOException
+		public ByteArrayPlane openPlane(final int imageIndex,
+			final long planeIndex, final ByteArrayPlane plane, final long[] planeMin,
+			final long[] planeMax, final SCIFIOConfig config) throws FormatException,
+			IOException
 		{
-			Metadata m = getMetadata();
-			byte[] buf = plane.getBytes();
+			final Metadata m = getMetadata();
+			final byte[] buf = plane.getBytes();
 			FormatTools.checkPlaneForReading(m, imageIndex, planeIndex, buf.length,
 				planeMin, planeMax);
 
-			int sizeX = (int) m.get(imageIndex).getAxisLength(Axes.X);
-			int sizeY = (int) m.get(imageIndex).getAxisLength(Axes.Y);
-			int bpp = FormatTools.getBytesPerPixel(m.get(imageIndex).getPixelType());
-			boolean little = m.get(imageIndex).isLittleEndian();
+			final int sizeX = (int) m.get(imageIndex).getAxisLength(Axes.X);
+			final int sizeY = (int) m.get(imageIndex).getAxisLength(Axes.Y);
+			final int bpp =
+				FormatTools.getBytesPerPixel(m.get(imageIndex).getPixelType());
+			final boolean little = m.get(imageIndex).isLittleEndian();
 
-			int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
-			int planeSize = paddedWidth * sizeY * m.getTimeBins() * bpp;
+			final int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
+			final int planeSize = paddedWidth * sizeY * m.getTimeBins() * bpp;
 
-			int x = (int) planeMin[m.get(imageIndex).getAxisIndex(Axes.X)], y =
+			final int x = (int) planeMin[m.get(imageIndex).getAxisIndex(Axes.X)], y =
 				(int) planeMin[m.get(imageIndex).getAxisIndex(Axes.Y)], w =
 				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.X)], h =
 				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.Y)];
 
-			boolean merge = m.mergeIntensity();
+			final boolean merge = m.mergeIntensity();
 			// Csarseven data has to read the entire image, so we may need to crop out
 			// the undesired region
-			byte[] b =
-				!merge ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+			byte[] b = !merge ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
 
-			SDTInfo info = m.getSDTInfo();
+			final SDTInfo info = m.getSDTInfo();
 
 			// FIFO support
 			if (info.measMode == 13) {
@@ -280,8 +282,8 @@ public class SDTFormat extends AbstractFormat {
 				getStream().seek(tmpOff);
 				info.readBlockHeader(getStream());
 				// Compute channel + block indices from the requested plane index.
-				int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
-				int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
+				final int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
+				final int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
 				// Seek to the data block for this plane index
 				for (int i = 0; i < blockIndex; i++) {
 					tmpOff = info.nextBlockOffs;
@@ -295,7 +297,7 @@ public class SDTFormat extends AbstractFormat {
 			// Csarseven support
 			else if (info.noOfDataBlocks > 1) {
 				int tmpOff = info.dataBlockOffs;
-				boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
+				final boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
 				if (crop && !merge) {
 					b = new byte[sizeY * sizeX * m.getTimeBins() * bpp];
 				}
@@ -339,8 +341,8 @@ public class SDTFormat extends AbstractFormat {
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
 				for (int row = 0; row < h; row++) {
 					getStream().skipBytes(x * bpp * m.getTimeBins());
-					getStream().read(b, row * bpp * m.getTimeBins() * w, w *
-						m.getTimeBins() * bpp);
+					getStream().read(b, row * bpp * m.getTimeBins() * w,
+						w * m.getTimeBins() * bpp);
 					getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 				}
 			}
@@ -351,11 +353,11 @@ public class SDTFormat extends AbstractFormat {
 			}
 
 			for (int row = 0; row < h; row++) {
-				int yi = (y + row) * sizeX * m.getTimeBins() * bpp;
-				int ri = row * w * bpp;
+				final int yi = (y + row) * sizeX * m.getTimeBins() * bpp;
+				final int ri = row * w * bpp;
 				for (int col = 0; col < w; col++) {
-					int xi = yi + (x + col) * m.getTimeBins() * bpp;
-					int ci = ri + col * bpp;
+					final int xi = yi + (x + col) * m.getTimeBins() * bpp;
+					final int ci = ri + col * bpp;
 					// combine all lifetime bins into single intensity value
 					short sum = 0;
 					for (int t = 0; t < m.getTimeBins(); t++) {
