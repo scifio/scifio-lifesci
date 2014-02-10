@@ -34,6 +34,7 @@ import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.common.DataTools;
+import io.scif.config.SCIFIOConfig;
 import io.scif.img.axes.SCIFIOAxes;
 import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
@@ -62,7 +63,7 @@ public class SDTFormat extends AbstractFormat {
 	}
 
 	@Override
-	public String[] getSuffixes() {
+	protected String[] makeSuffixArray() {
 		return new String[] { "sdt" };
 	}
 
@@ -204,8 +205,8 @@ public class SDTFormat extends AbstractFormat {
 		// -- Parser API methods --
 
 		@Override
-		protected void typedParse(RandomAccessInputStream stream, Metadata meta)
-			throws IOException, FormatException
+		protected void typedParse(RandomAccessInputStream stream, Metadata meta,
+			final SCIFIOConfig config) throws IOException, FormatException
 		{
 			stream.order(true);
 
@@ -230,18 +231,19 @@ public class SDTFormat extends AbstractFormat {
 	 */
 	public static class Reader extends ByteArrayReader<Metadata> {
 
-		// -- Constructor --
+		// -- AbstractReader Methods  --
 
-		public Reader() {
-			domains = new String[] { FormatTools.FLIM_DOMAIN };
+		@Override
+		protected String[] createDomainArray() {
+			return new String[] { FormatTools.FLIM_DOMAIN };
 		}
 
 		// -- Reader API Methods --
 
 		@Override
 		public ByteArrayPlane openPlane(int imageIndex, long planeIndex,
-			ByteArrayPlane plane, long[] planeMin, long[] planeMax)
-			throws FormatException, IOException
+			ByteArrayPlane plane, long[] planeMin, long[] planeMax,
+			final SCIFIOConfig config) throws FormatException, IOException
 		{
 			Metadata m = getMetadata();
 			byte[] buf = plane.getBytes();
