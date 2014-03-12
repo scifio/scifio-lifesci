@@ -14,8 +14,7 @@
 	<version>0.4.1-SNAPSHOT</version>
 
 	<name>SCIFIO Life Sciences Extension</name>
-	<description>Provides SCIFIO support for proprietary life science formats.
-	</description>
+	<description>Provides SCIFIO support for proprietary life science formats.</description>
 	<url>http://scif.io/</url>
 	<inceptionYear>2013</inceptionYear>
 
