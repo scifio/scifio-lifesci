@@ -3,33 +3,59 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.scijava</groupId>
-		<artifactId>pom-scijava</artifactId>
-		<version>2.22</version>
+		<groupId>io.scif</groupId>
+		<artifactId>pom-scifio</artifactId>
+		<version>1.0</version>
 		<relativePath />
 	</parent>
 
-	<groupId>io.scif</groupId>
 	<artifactId>scifio-lifesci</artifactId>
 	<version>0.5.1-SNAPSHOT</version>
 
 	<name>SCIFIO Life Sciences Extension</name>
 	<description>Provides SCIFIO support for proprietary life science formats.</description>
-	<url>http://scif.io/</url>
 	<inceptionYear>2013</inceptionYear>
+	<licenses>
+		<license>
+			<name>GNU General Public License v2+</name>
+			<url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git://github.com/scifio/scifio-lifesci</connection>
+		<developerConnection>scm:git:git@github.com:scifio/scifio-lifesci</developerConnection>
+		<tag>HEAD</tag>
+		<url>http://github.com/scifio/scifio-lifesci</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/scifio/scifio-lifesci/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/SCIFIO-LifeSci/</url>
+	</ciManagement>
+
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
-			<version>${scijava-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
-			<version>${scifio.version}</version>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -46,103 +72,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<licenses>
-		<license>
-			<name>GNU General Public License v2+</name>
-			<url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<organization>
-		<name>SCIFIO</name>
-		<url>http://scif.io/</url>
-	</organization>
-
-	<developers>
-		<developer>
-			<id>hinerm</id>
-			<name>Mark Hiner</name>
-			<email>hiner@wisc.edu</email>
-			<url>http://developer.imagej.net/users/hinerm</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-		<developer>
-			<id>ctrueden</id>
-			<name>Curtis Rueden</name>
-			<email>ctrueden@wisc.edu</email>
-			<url>http://loci.wisc.edu/people/curtis-rueden</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-	</developers>
-
-	<issueManagement>
-		<system>GitHub Issues</system>
-		<url>https://github.com/scifio/scifio-lifesci/issues</url>
-	</issueManagement>
-
-	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/SCIFIO-LifeSci/</url>
-	</ciManagement>
-
-	<mailingLists>
-		<mailingList>
-			<name>SCIFIO</name>
-			<subscribe>http://scif.io/mailman/listinfo/scifio</subscribe>
-			<unsubscribe>http://scif.io/mailman/listinfo/scifio</unsubscribe>
-			<post>scifio@scif.io</post>
-			<archive>http://scif.io/pipermail/scifio/</archive>
-		</mailingList>
-		<mailingList>
-			<name>SciJava</name>
-			<subscribe>https://groups.google.com/forum/?fromgroups#!forum/scijava</subscribe>
-			<unsubscribe>https://groups.google.com/forum/?fromgroups#!forum/scijava</unsubscribe>
-			<post>scijava@googlegroups.com</post>
-			<archive>https://groups.google.com/forum/?fromgroups#!forum/scijava</archive>
-		</mailingList>
-	</mailingLists>
-
-	<scm>
-		<connection>scm:git:git://github.com/scifio/scifio-lifesci</connection>
-		<developerConnection>scm:git:git@github.com:scifio/scifio-lifesci</developerConnection>
-		<tag>HEAD</tag>
-		<url>http://github.com/scifio/scifio-lifesci</url>
-	</scm>
-
-	<repositories>
-		<!-- NB: for parent project -->
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-	</repositories>
-
-<!-- NB: for deploying to maven.imagej.net -->
-<distributionManagement>
-  <repository>
-    <id>imagej.releases</id>
-    <name>ImageJ Releases Repository</name>
-    <url>dav:http://maven.imagej.net/content/repositories/releases</url>
-  </repository>
-  <snapshotRepository>
-    <id>imagej.snapshots</id>
-    <name>ImageJ Snapshots Repository</name>
-    <url>dav:http://maven.imagej.net/content/repositories/snapshots</url>
-  </snapshotRepository>
-</distributionManagement>
 
 </project>
