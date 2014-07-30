@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>scifio-lifesci</artifactId>
-	<version>0.5.2-SNAPSHOT</version>
+	<version>0.5.2</version>
 
 	<name>SCIFIO Life Sciences Extension</name>
 	<description>Provides SCIFIO support for proprietary life science formats.</description>
@@ -26,7 +26,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/scifio/scifio-lifesci</connection>
 		<developerConnection>scm:git:git@github.com:scifio/scifio-lifesci</developerConnection>
-		<tag>HEAD</tag>
+		<tag>scifio-lifesci-0.5.2</tag>
 		<url>http://github.com/scifio/scifio-lifesci</url>
 	</scm>
 	<issueManagement>
