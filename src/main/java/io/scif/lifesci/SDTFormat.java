@@ -42,6 +42,7 @@ import io.scif.util.FormatTools;
 import java.io.IOException;
 
 import net.imglib2.meta.Axes;
+import net.imglib2.meta.CalibratedAxis;
 
 import org.scijava.plugin.Plugin;
 
@@ -91,7 +92,18 @@ public class SDTFormat extends AbstractFormat {
 		/** Whether to combine lifetime bins into single intensity image planes. */
 		private boolean mergeIntensity = false;
 
+		private double timeBase;
+
 		// -- SDT field getters/setters --
+
+		
+		public double getTimeBase() {
+			return timeBase;
+		}
+
+		public void setTimeBase(double timeBase) {
+			this.timeBase = timeBase;
+		}
 
 		public SDTInfo getSDTInfo() {
 			return info;
@@ -146,6 +158,11 @@ public class SDTFormat extends AbstractFormat {
 			final ImageMetadata iMeta = get(0);
 			if (!mergeIntensity()) {
 				iMeta.addAxis(SCIFIOAxes.LIFETIME, getSDTInfo().timeBins);
+				CalibratedAxis axis = iMeta.getAxis(SCIFIOAxes.LIFETIME);
+				axis.setUnit("ns");
+				double scale = getTimeBase() / getSDTInfo().timeBins;
+				FormatTools.calibrate(iMeta.getAxis(SCIFIOAxes.LIFETIME),
+					scale, 0.0);
 				iMeta.setPlanarAxisCount(3);
 			}
 			iMeta.addAxis(Axes.X, getSDTInfo().width);
@@ -218,7 +235,10 @@ public class SDTFormat extends AbstractFormat {
 
 			meta.getTable().put("time bins", meta.getTimeBins());
 			meta.getTable().put("channels", meta.getChannels());
-			meta.getTable().put("time base", 1e9 * info.tacR / info.tacG);
+
+			final double timeBase = 1e9 * info.tacR / info.tacG;
+			meta.getTable().put("time base", timeBase);
+			meta.timeBase = timeBase;
 			meta.mergeIntensity = mergeIntensity;
 		}
 	}
