@@ -41,8 +41,8 @@ import io.scif.util.FormatTools;
 
 import java.io.IOException;
 
-import net.imglib2.meta.Axes;
-import net.imglib2.meta.CalibratedAxis;
+import net.imagej.axis.Axes;
+import net.imagej.axis.CalibratedAxis;
 
 import org.scijava.plugin.Plugin;
 
