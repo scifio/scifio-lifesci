@@ -1,4 +1,4 @@
-![](http://jenkins.imagej.net/job/SCIFIO-LifeSci/lastBuild/badge/icon)
+[![](http://jenkins.imagej.net/job/SCIFIO-LifeSci/lastBuild/badge/icon)](http://jenkins.imagej.net/job/SCIFIO-LifeSci/)
 
 scifio-lifesci
 ==============
