@@ -3,18 +3,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>io.scif</groupId>
-		<artifactId>pom-scifio</artifactId>
-		<version>5.2.0</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>12.0.0</version>
 		<relativePath />
 	</parent>
 
+	<groupId>io.scif</groupId>
 	<artifactId>scifio-lifesci</artifactId>
 	<version>0.7.1-SNAPSHOT</version>
 
 	<name>SCIFIO Life Sciences Extension</name>
 	<description>Provides SCIFIO support for proprietary life science formats.</description>
+	<url>http://imagej.net/SCIFIO_Life_Sciences_Extension</url>
 	<inceptionYear>2013</inceptionYear>
+	<organization>
+		<name>SCIFIO</name>
+		<url>http://scif.io/</url>
+	</organization>
 	<licenses>
 		<license>
 			<name>GNU General Public License v2+</name>
@@ -57,6 +63,13 @@
 		</contributor>
 	</contributors>
 
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
 	<scm>
 		<connection>scm:git:git://github.com/scifio/scifio-lifesci</connection>
 		<developerConnection>scm:git:git@github.com:scifio/scifio-lifesci</developerConnection>
@@ -71,6 +84,16 @@
 		<system>Jenkins</system>
 		<url>http://jenkins.imagej.net/job/SCIFIO-LifeSci/</url>
 	</ciManagement>
+
+	<properties>
+		<package-name>io.scif.lifesci</package-name>
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Open Microscopy Environment:
+	- Board of Regents of the University of Wisconsin-Madison
+	- Glencoe Software, Inc.
+	- University of Dundee</license.copyrightOwners>
+		<license.projectName>SCIFIO Life Sciences Extension</license.projectName>
+	</properties>
 
 	<repositories>
 		<repository>
@@ -89,21 +112,4 @@
 			<artifactId>scifio</artifactId>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<configuration>
-					<licenseName>gpl_v2</licenseName>
-					<projectName>SCIFIO Life Sciences Extension</projectName>
-					<organizationName>Open Microscopy Environment:
-	- Board of Regents of the University of Wisconsin-Madison
-	- Glencoe Software, Inc.
-	- University of Dundee</organizationName>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
