@@ -81,8 +81,8 @@
 		<url>https://github.com/scifio/scifio-lifesci/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/SCIFIO-LifeSci/</url>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/scifio/scifio-lifesci</url>
 	</ciManagement>
 
 	<properties>

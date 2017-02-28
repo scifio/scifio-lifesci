@@ -1,4 +1,4 @@
-[![](http://jenkins.imagej.net/job/SCIFIO-LifeSci/lastBuild/badge/icon)](http://jenkins.imagej.net/job/SCIFIO-LifeSci/)
+[![](https://travis-ci.org/scifio/scifio-lifesci.svg?branch=master)](https://travis-ci.org/scifio/scifio-lifesci)
 
 scifio-lifesci
 ==============
