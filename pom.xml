@@ -93,6 +93,9 @@
 	- Glencoe Software, Inc.
 	- University of Dundee</license.copyrightOwners>
 		<license.projectName>SCIFIO Life Sciences Extension</license.projectName>
+
+		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
+		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 	</properties>
 
 	<repositories>
