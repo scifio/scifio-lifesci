@@ -33,7 +33,6 @@ import io.scif.ByteArrayReader;
 import io.scif.Format;
 import io.scif.FormatException;
 import io.scif.ImageMetadata;
-import io.scif.common.DataTools;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.axes.SCIFIOAxes;
 import io.scif.io.RandomAccessInputStream;
@@ -43,8 +42,10 @@ import java.io.IOException;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
+import net.imglib2.Interval;
 
 import org.scijava.plugin.Plugin;
+import org.scijava.util.Bytes;
 
 /**
  * SDTReader is the file format reader for Becker &amp; Hickl SPC-Image SDT
@@ -259,14 +260,14 @@ public class SDTFormat extends AbstractFormat {
 
 		@Override
 		public ByteArrayPlane openPlane(final int imageIndex,
-			final long planeIndex, final ByteArrayPlane plane, final long[] planeMin,
-			final long[] planeMax, final SCIFIOConfig config) throws FormatException,
-			IOException
+			final long planeIndex, final ByteArrayPlane plane,
+			final Interval bounds, final SCIFIOConfig config)
+			throws FormatException, IOException
 		{
 			final Metadata m = getMetadata();
 			final byte[] buf = plane.getBytes();
 			FormatTools.checkPlaneForReading(m, imageIndex, planeIndex, buf.length,
-				planeMin, planeMax);
+				bounds);
 
 			final int sizeX = (int) m.get(imageIndex).getAxisLength(Axes.X);
 			final int sizeY = (int) m.get(imageIndex).getAxisLength(Axes.Y);
@@ -277,10 +278,10 @@ public class SDTFormat extends AbstractFormat {
 			final int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
 			final int planeSize = paddedWidth * sizeY * m.getTimeBins() * bpp;
 
-			final int x = (int) planeMin[m.get(imageIndex).getAxisIndex(Axes.X)], y =
-				(int) planeMin[m.get(imageIndex).getAxisIndex(Axes.Y)], w =
-				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.X)], h =
-				(int) planeMax[m.get(imageIndex).getAxisIndex(Axes.Y)];
+			final int x = (int) bounds.min(m.get(imageIndex).getAxisIndex(Axes.X)), //
+					y = (int) bounds.min(m.get(imageIndex).getAxisIndex(Axes.Y)), //
+					w = (int) bounds.dimension(m.get(imageIndex).getAxisIndex(Axes.X)), //
+					h = (int) bounds.dimension(m.get(imageIndex).getAxisIndex(Axes.Y));
 
 			final boolean merge = m.mergeIntensity();
 			// Csarseven data has to read the entire image, so we may need to crop out
@@ -377,9 +378,9 @@ public class SDTFormat extends AbstractFormat {
 					// combine all lifetime bins into single intensity value
 					short sum = 0;
 					for (int t = 0; t < m.getTimeBins(); t++) {
-						sum += DataTools.bytesToShort(b, xi + t * bpp, little);
+						sum += Bytes.toShort(b, xi + t * bpp, little);
 					}
-					DataTools.unpackBytes(sum, buf, ci, 2, little);
+					Bytes.unpack(sum, buf, ci, 2, little);
 				}
 			}
 			return plane;
