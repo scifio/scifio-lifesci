@@ -27,10 +27,12 @@ package io.scif.lifesci;
 
 import io.scif.MetaTable;
 import io.scif.common.Constants;
-import io.scif.io.RandomAccessInputStream;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
+
+import org.scijava.io.handle.DataHandle;
+import org.scijava.io.location.Location;
 
 /**
  * SDTInfo encapsulates the header information for Becker &amp; Hickl SPC-Image
@@ -417,25 +419,25 @@ public class SDTInfo {
 	 * Constructs a new SDT header by reading values from the given input source,
 	 * populating the given metadata table.
 	 */
-	public SDTInfo(final io.scif.io.RandomAccessInputStream stream,
+	public SDTInfo(final DataHandle<Location> handle,
 		final MetaTable meta) throws IOException
 	{
 		// read bhfileHeader
-		revision = stream.readShort();
-		infoOffs = stream.readInt();
-		infoLength = stream.readShort();
-		setupOffs = stream.readInt();
-		setupLength = stream.readShort();
-		dataBlockOffs = stream.readInt();
-		noOfDataBlocks = stream.readShort();
-		dataBlockLength = stream.readInt();
-		measDescBlockOffs = stream.readInt();
-		noOfMeasDescBlocks = stream.readShort();
-		measDescBlockLength = stream.readShort();
-		headerValid = stream.readUnsignedShort();
-		reserved1 = (0xffffffffL & stream.readInt()); // unsigned
-		reserved2 = stream.readUnsignedShort();
-		chksum = stream.readUnsignedShort();
+		revision = handle.readShort();
+		infoOffs = handle.readInt();
+		infoLength = handle.readShort();
+		setupOffs = handle.readInt();
+		setupLength = handle.readShort();
+		dataBlockOffs = handle.readInt();
+		noOfDataBlocks = handle.readShort();
+		dataBlockLength = handle.readInt();
+		measDescBlockOffs = handle.readInt();
+		noOfMeasDescBlocks = handle.readShort();
+		measDescBlockLength = handle.readShort();
+		headerValid = handle.readUnsignedShort();
+		reserved1 = (0xffffffffL & handle.readInt()); // unsigned
+		reserved2 = handle.readUnsignedShort();
+		chksum = handle.readUnsignedShort();
 
 		// save bhfileHeader to metadata table
 		if (meta != null) {
@@ -460,9 +462,9 @@ public class SDTInfo {
 		}
 
 		// read file info
-		stream.seek(infoOffs);
+		handle.seek(infoOffs);
 		final byte[] infoBytes = new byte[infoLength];
-		stream.readFully(infoBytes);
+		handle.readFully(infoBytes);
 		info = new String(infoBytes, Constants.ENCODING);
 
 		StringTokenizer st = new StringTokenizer(info, "\n");
@@ -480,9 +482,9 @@ public class SDTInfo {
 		}
 
 		// read setup
-		stream.seek(setupOffs);
+		handle.seek(setupOffs);
 		final byte[] setupBytes = new byte[setupLength];
-		stream.readFully(setupBytes);
+		handle.readFully(setupBytes);
 		setup = new String(setupBytes, Constants.ENCODING);
 
 		st = new StringTokenizer(setup, "\n");
@@ -534,7 +536,7 @@ public class SDTInfo {
 
 		// read measurement data
 		if (noOfMeasDescBlocks > 0) {
-			stream.seek(measDescBlockOffs);
+			handle.seek(measDescBlockOffs);
 
 			hasMeasureInfo = measDescBlockLength >= 211;
 			hasMeasStopInfo = measDescBlockLength >= 211 + 60;
@@ -543,66 +545,66 @@ public class SDTInfo {
 			hasMeasHISTInfo = measDescBlockLength >= 211 + 60 + 38 + 26 + 24;
 
 			if (hasMeasureInfo) {
-				time = stream.readString(9).trim();
-				date = stream.readString(11).trim();
-				modSerNo = stream.readString(16).trim();
+				time = handle.readString(9).trim();
+				date = handle.readString(11).trim();
+				modSerNo = handle.readString(16).trim();
 
-				measMode = stream.readShort();
-				cfdLL = stream.readFloat();
-				cfdLH = stream.readFloat();
-				cfdZC = stream.readFloat();
-				cfdHF = stream.readFloat();
-				synZC = stream.readFloat();
-				synFD = stream.readShort();
-				synHF = stream.readFloat();
-				tacR = stream.readFloat();
-				tacG = stream.readShort();
-				tacOF = stream.readFloat();
-				tacLL = stream.readFloat();
-				tacLH = stream.readFloat();
-				adcRE = stream.readShort();
-				ealDE = stream.readShort();
-				ncx = stream.readShort();
-				ncy = stream.readShort();
-				page = stream.readUnsignedShort();
-				colT = stream.readFloat();
-				repT = stream.readFloat();
-				stopt = stream.readShort();
-				overfl = stream.readUnsignedByte();
-				useMotor = stream.readShort();
-				steps = stream.readUnsignedShort();
-				offset = stream.readFloat();
-				dither = stream.readShort();
-				incr = stream.readShort();
-				memBank = stream.readShort();
+				measMode = handle.readShort();
+				cfdLL = handle.readFloat();
+				cfdLH = handle.readFloat();
+				cfdZC = handle.readFloat();
+				cfdHF = handle.readFloat();
+				synZC = handle.readFloat();
+				synFD = handle.readShort();
+				synHF = handle.readFloat();
+				tacR = handle.readFloat();
+				tacG = handle.readShort();
+				tacOF = handle.readFloat();
+				tacLL = handle.readFloat();
+				tacLH = handle.readFloat();
+				adcRE = handle.readShort();
+				ealDE = handle.readShort();
+				ncx = handle.readShort();
+				ncy = handle.readShort();
+				page = handle.readUnsignedShort();
+				colT = handle.readFloat();
+				repT = handle.readFloat();
+				stopt = handle.readShort();
+				overfl = handle.readUnsignedByte();
+				useMotor = handle.readShort();
+				steps = handle.readUnsignedShort();
+				offset = handle.readFloat();
+				dither = handle.readShort();
+				incr = handle.readShort();
+				memBank = handle.readShort();
 
-				modType = stream.readString(16).trim();
+				modType = handle.readString(16).trim();
 
-				synTH = stream.readFloat();
-				deadTimeComp = stream.readShort();
-				polarityL = stream.readShort();
-				polarityF = stream.readShort();
-				polarityP = stream.readShort();
-				linediv = stream.readShort();
-				accumulate = stream.readShort();
-				flbckY = stream.readInt();
-				flbckX = stream.readInt();
-				bordU = stream.readInt();
-				bordL = stream.readInt();
-				pixTime = stream.readFloat();
-				pixClk = stream.readShort();
-				trigger = stream.readShort();
-				scanX = stream.readInt();
-				scanY = stream.readInt();
-				scanRX = stream.readInt();
-				scanRY = stream.readInt();
-				fifoTyp = stream.readShort();
-				epxDiv = stream.readInt();
-				modTypeCode = stream.readUnsignedShort();
-				modFpgaVer = stream.readUnsignedShort();
-				overflowCorrFactor = stream.readFloat();
-				adcZoom = stream.readInt();
-				cycles = stream.readInt();
+				synTH = handle.readFloat();
+				deadTimeComp = handle.readShort();
+				polarityL = handle.readShort();
+				polarityF = handle.readShort();
+				polarityP = handle.readShort();
+				linediv = handle.readShort();
+				accumulate = handle.readShort();
+				flbckY = handle.readInt();
+				flbckX = handle.readInt();
+				bordU = handle.readInt();
+				bordL = handle.readInt();
+				pixTime = handle.readFloat();
+				pixClk = handle.readShort();
+				trigger = handle.readShort();
+				scanX = handle.readInt();
+				scanY = handle.readInt();
+				scanRX = handle.readInt();
+				scanRY = handle.readInt();
+				fifoTyp = handle.readShort();
+				epxDiv = handle.readInt();
+				modTypeCode = handle.readUnsignedShort();
+				modFpgaVer = handle.readUnsignedShort();
+				overflowCorrFactor = handle.readFloat();
+				adcZoom = handle.readInt();
+				cycles = handle.readInt();
 
 				timepoints = stopt;
 
@@ -680,22 +682,22 @@ public class SDTInfo {
 
 			if (hasMeasStopInfo) {
 				// MeasStopInfo - information collected when measurement is finished
-				status = stream.readUnsignedShort();
-				flags = stream.readUnsignedShort();
-				stopTime = stream.readFloat();
-				curStep = stream.readInt();
-				curCycle = stream.readInt();
-				curPage = stream.readInt();
-				minSyncRate = stream.readFloat();
-				minCfdRate = stream.readFloat();
-				minTacRate = stream.readFloat();
-				minAdcRate = stream.readFloat();
-				maxSyncRate = stream.readFloat();
-				maxCfdRate = stream.readFloat();
-				maxTacRate = stream.readFloat();
-				maxAdcRate = stream.readFloat();
-				mReserved1 = stream.readInt();
-				mReserved2 = stream.readFloat();
+				status = handle.readUnsignedShort();
+				flags = handle.readUnsignedShort();
+				stopTime = handle.readFloat();
+				curStep = handle.readInt();
+				curCycle = handle.readInt();
+				curPage = handle.readInt();
+				minSyncRate = handle.readFloat();
+				minCfdRate = handle.readFloat();
+				minTacRate = handle.readFloat();
+				minAdcRate = handle.readFloat();
+				maxSyncRate = handle.readFloat();
+				maxCfdRate = handle.readFloat();
+				maxTacRate = handle.readFloat();
+				maxAdcRate = handle.readFloat();
+				mReserved1 = handle.readInt();
+				mReserved2 = handle.readFloat();
 
 				// save MeasStopInfo to metadata table
 				if (meta != null) {
@@ -721,19 +723,19 @@ public class SDTInfo {
 
 			if (hasMeasFCSInfo) {
 				// MeasFCSInfo - information collected when FIFO measurement is finished
-				chan = stream.readUnsignedShort();
-				fcsDecayCalc = stream.readUnsignedShort();
-				mtResol = (0xffffffffL & stream.readInt()); // unsigned
-				cortime = stream.readFloat();
-				calcPhotons = (0xffffffffL & stream.readInt()); // unsigned
-				fcsPoints = stream.readInt();
-				endTime = stream.readFloat();
-				overruns = stream.readUnsignedShort();
-				fcsType = stream.readUnsignedShort();
-				crossChan = stream.readUnsignedShort();
-				mod = stream.readUnsignedShort();
-				crossMod = stream.readUnsignedShort();
-				crossMtResol = (0xffffffffL & stream.readInt()); // unsigned
+				chan = handle.readUnsignedShort();
+				fcsDecayCalc = handle.readUnsignedShort();
+				mtResol = (0xffffffffL & handle.readInt()); // unsigned
+				cortime = handle.readFloat();
+				calcPhotons = (0xffffffffL & handle.readInt()); // unsigned
+				fcsPoints = handle.readInt();
+				endTime = handle.readFloat();
+				overruns = handle.readUnsignedShort();
+				fcsType = handle.readUnsignedShort();
+				crossChan = handle.readUnsignedShort();
+				mod = handle.readUnsignedShort();
+				crossMod = handle.readUnsignedShort();
+				crossMtResol = (0xffffffffL & handle.readInt()); // unsigned
 
 				// save MeasFCSInfo to metadata table
 				if (meta != null) {
@@ -755,15 +757,15 @@ public class SDTInfo {
 			}
 
 			if (hasExtendedMeasureInfo) {
-				imageX = stream.readInt();
-				imageY = stream.readInt();
-				imageRX = stream.readInt();
-				imageRY = stream.readInt();
-				xyGain = stream.readShort();
-				masterClock = stream.readShort();
-				adcDE = stream.readShort();
-				detType = stream.readShort();
-				xAxis = stream.readShort();
+				imageX = handle.readInt();
+				imageY = handle.readInt();
+				imageRX = handle.readInt();
+				imageRY = handle.readInt();
+				xyGain = handle.readShort();
+				masterClock = handle.readShort();
+				adcDE = handle.readShort();
+				detType = handle.readShort();
+				xAxis = handle.readShort();
 
 				// save extra MeasureInfo to metadata table
 				if (meta != null) {
@@ -783,12 +785,12 @@ public class SDTInfo {
 			if (hasMeasHISTInfo) {
 				// MeasHISTInfo - extension of FCSInfo, valid only for FIFO meas
 				// extension of MeasFCSInfo for other histograms (FIDA, FILDA, MCS)
-				fidaTime = stream.readFloat();
-				fildaTime = stream.readFloat();
-				fidaPoints = stream.readInt();
-				fildaPoints = stream.readInt();
-				mcsTime = stream.readFloat();
-				mcsPoints = stream.readInt();
+				fidaTime = handle.readFloat();
+				fildaTime = handle.readFloat();
+				fidaPoints = handle.readInt();
+				fildaPoints = handle.readInt();
+				mcsTime = handle.readFloat();
+				mcsPoints = handle.readInt();
 
 				// save MeasHISTInfo to metadata table
 				if (meta != null) {
@@ -803,9 +805,9 @@ public class SDTInfo {
 			}
 		}
 
-		stream.seek(dataBlockOffs);
+		handle.seek(dataBlockOffs);
 
-		readBlockHeader(stream);
+		readBlockHeader(handle);
 
 		// save BHFileBlockHeader to metadata table
 		if (meta != null) {
@@ -848,7 +850,7 @@ public class SDTInfo {
 	 * @param stream - stream to read from
 	 * @throws IOException
 	 */
-	public void readBlockHeader(final RandomAccessInputStream stream)
+	public void readBlockHeader(final DataHandle<Location> stream)
 		throws IOException
 	{
 		// read BHFileBlockHeader

@@ -35,7 +35,6 @@ import io.scif.FormatException;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.axes.SCIFIOAxes;
-import io.scif.io.RandomAccessInputStream;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
@@ -44,6 +43,8 @@ import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imglib2.Interval;
 
+import org.scijava.io.handle.DataHandle;
+import org.scijava.io.location.Location;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Bytes;
 
@@ -97,7 +98,6 @@ public class SDTFormat extends AbstractFormat {
 
 		// -- SDT field getters/setters --
 
-		
 		public double getTimeBase() {
 			return timeBase;
 		}
@@ -162,8 +162,7 @@ public class SDTFormat extends AbstractFormat {
 				CalibratedAxis axis = iMeta.getAxis(SCIFIOAxes.LIFETIME);
 				axis.setUnit("ns");
 				double scale = getTimeBase() / getSDTInfo().timeBins;
-				FormatTools.calibrate(iMeta.getAxis(SCIFIOAxes.LIFETIME),
-					scale, 0.0);
+				FormatTools.calibrate(iMeta.getAxis(SCIFIOAxes.LIFETIME), scale, 0.0);
 				iMeta.setPlanarAxisCount(3);
 			}
 			iMeta.addAxis(Axes.X, getSDTInfo().width);
@@ -219,11 +218,11 @@ public class SDTFormat extends AbstractFormat {
 		// -- Parser API methods --
 
 		@Override
-		protected void typedParse(final RandomAccessInputStream stream,
+		protected void typedParse(final DataHandle<Location> stream,
 			final Metadata meta, final SCIFIOConfig config) throws IOException,
 			FormatException
 		{
-			stream.order(true);
+			stream.setLittleEndian(true);
 
 			log().info("Reading SDT header");
 
@@ -259,10 +258,9 @@ public class SDTFormat extends AbstractFormat {
 		// -- Reader API Methods --
 
 		@Override
-		public ByteArrayPlane openPlane(final int imageIndex,
-			final long planeIndex, final ByteArrayPlane plane,
-			final Interval bounds, final SCIFIOConfig config)
-			throws FormatException, IOException
+		public ByteArrayPlane openPlane(final int imageIndex, final long planeIndex,
+			final ByteArrayPlane plane, final Interval bounds,
+			final SCIFIOConfig config) throws FormatException, IOException
 		{
 			final Metadata m = getMetadata();
 			final byte[] buf = plane.getBytes();
@@ -271,8 +269,8 @@ public class SDTFormat extends AbstractFormat {
 
 			final int sizeX = (int) m.get(imageIndex).getAxisLength(Axes.X);
 			final int sizeY = (int) m.get(imageIndex).getAxisLength(Axes.Y);
-			final int bpp =
-				FormatTools.getBytesPerPixel(m.get(imageIndex).getPixelType());
+			final int bpp = FormatTools.getBytesPerPixel(m.get(imageIndex)
+				.getPixelType());
 			final boolean little = m.get(imageIndex).isLittleEndian();
 
 			final int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
@@ -296,20 +294,20 @@ public class SDTFormat extends AbstractFormat {
 				// complete planes. Planes are assumed to be stored as they would be
 				// for single block datasets.
 				int tmpOff = info.dataBlockOffs;
-				getStream().seek(tmpOff);
-				info.readBlockHeader(getStream());
+				getHandle().seek(tmpOff);
+				info.readBlockHeader(getHandle());
 				// Compute channel + block indices from the requested plane index.
 				final int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
 				final int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
 				// Seek to the data block for this plane index
 				for (int i = 0; i < blockIndex; i++) {
 					tmpOff = info.nextBlockOffs;
-					getStream().seek(tmpOff);
-					info.readBlockHeader(getStream());
+					getHandle().seek(tmpOff);
+					info.readBlockHeader(getHandle());
 				}
 				// Skip to the requested plane and row offset
-				getStream().skip(
-					channelIndex * planeSize + y * paddedWidth * bpp * m.getTimeBins());
+				getHandle().skip(channelIndex * planeSize + y * paddedWidth * bpp * m
+					.getTimeBins());
 			}
 			// Csarseven support
 			else if (info.noOfDataBlocks > 1) {
@@ -322,15 +320,15 @@ public class SDTFormat extends AbstractFormat {
 				for (int row = h - 1; row >= 0; row--) {
 					for (int col = 0; col < w; col++) {
 
-						getStream().seek(tmpOff);
-						info.readBlockHeader(getStream());
+						getHandle().seek(tmpOff);
+						info.readBlockHeader(getHandle());
 						// Skip to the desired plane (channel)
 						// Assuming channels are interleaved
-						getStream().skip(planeIndex * m.getTimeBins() * bpp);
+						getHandle().skip(planeIndex * m.getTimeBins() * bpp);
 						// Reads the current data block. Each data block contains all
 						// the time bins for a single pixel position.
-						getStream().read(b, ((row * w) + col) * m.getTimeBins() * bpp,
-							m.getTimeBins() * bpp);
+						getHandle().read(b, ((row * w) + col) * m.getTimeBins() * bpp, m
+							.getTimeBins() * bpp);
 						// Update offset to point to the next data block (pixel)
 						tmpOff = info.nextBlockOffs;
 					}
@@ -348,19 +346,18 @@ public class SDTFormat extends AbstractFormat {
 			else {
 				// binOffset points to the start of the pixels, then we skip the
 				// required number of planes and rows.
-				getStream().seek(
-					m.getBinOffset() + planeIndex * planeSize + y * paddedWidth * bpp *
-						m.getTimeBins());
+				getHandle().seek(m.getBinOffset() + planeIndex * planeSize + y *
+					paddedWidth * bpp * m.getTimeBins());
 			}
 
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
 				for (int row = 0; row < h; row++) {
-					getStream().skipBytes(x * bpp * m.getTimeBins());
-					getStream().read(b, row * bpp * m.getTimeBins() * w,
-						w * m.getTimeBins() * bpp);
-					getStream().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+					getHandle().skipBytes(x * bpp * m.getTimeBins());
+					getHandle().read(b, row * bpp * m.getTimeBins() * w, w * m
+						.getTimeBins() * bpp);
+					getHandle().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 				}
 			}
 
