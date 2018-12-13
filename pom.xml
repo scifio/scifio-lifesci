@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -48,18 +50,26 @@
 		<contributor>
 			<name>Mark Hiner</name>
 			<url>http://imagej.net/User:Hinerm</url>
-			<roles><role>founder</role></roles>
-			<properties><id>hinerm</id></properties>
+			<roles>
+				<role>founder</role>
+			</roles>
+			<properties>
+				<id>hinerm</id>
+			</properties>
 		</contributor>
 		<contributor>
 			<name>Johannes Schindelin</name>
 			<url>http://imagej.net/User:Schindelin</url>
-			<properties><id>dscho</id></properties>
+			<properties>
+				<id>dscho</id>
+			</properties>
 		</contributor>
 		<contributor>
 			<name>Aivar Grislis</name>
 			<url>http://imagej.net/User:Grislis</url>
-			<properties><id>grislis</id></properties>
+			<properties>
+				<id>grislis</id>
+			</properties>
 		</contributor>
 	</contributors>
 
@@ -89,9 +99,11 @@
 		<package-name>io.scif.lifesci</package-name>
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Open Microscopy Environment:
-	- Board of Regents of the University of Wisconsin-Madison
-	- Glencoe Software, Inc.
-	- University of Dundee</license.copyrightOwners>
+			- Board of
+			Regents of the University of Wisconsin-Madison
+			- Glencoe Software,
+			Inc.
+			- University of Dundee</license.copyrightOwners>
 		<license.projectName>SCIFIO Life Sciences Extension</license.projectName>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
@@ -114,6 +126,28 @@
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-io-http</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.scif</groupId>
+			<artifactId>scifio</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -80,7 +80,7 @@ public class SDTFormat extends AbstractFormat {
 		// -- Fields --
 
 		/** Object containing SDT header information. */
-		private SDTInfo info;
+		private SDTInfo sdtInfo;
 
 		/** Offset to binary data. */
 		private int binOffset;
@@ -107,11 +107,11 @@ public class SDTFormat extends AbstractFormat {
 		}
 
 		public SDTInfo getSDTInfo() {
-			return info;
+			return sdtInfo;
 		}
 
 		public void setSDTInfo(final SDTInfo info) {
-			this.info = info;
+			this.sdtInfo = info;
 		}
 
 		public int getBinOffset() {
@@ -182,7 +182,7 @@ public class SDTFormat extends AbstractFormat {
 			super.close(fileOnly);
 			if (!fileOnly) {
 				binOffset = timeBins = channels = 0;
-				info = null;
+				sdtInfo = null;
 			}
 		}
 	}
