@@ -15,16 +15,16 @@
 
 	<name>SCIFIO Life Sciences Extension</name>
 	<description>Provides SCIFIO support for proprietary life science formats.</description>
-	<url>http://imagej.net/SCIFIO_Life_Sciences_Extension</url>
+	<url>https://imagej.net/SCIFIO_Life_Sciences_Extension</url>
 	<inceptionYear>2013</inceptionYear>
 	<organization>
 		<name>SCIFIO</name>
-		<url>http://scif.io/</url>
+		<url>https://scif.io/</url>
 	</organization>
 	<licenses>
 		<license>
 			<name>GNU General Public License v2+</name>
-			<url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
+			<url>https://www.gnu.org/licenses/gpl-2.0.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>ctrueden</id>
 			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/User:Rueden</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -47,18 +47,18 @@
 	<contributors>
 		<contributor>
 			<name>Mark Hiner</name>
-			<url>http://imagej.net/User:Hinerm</url>
+			<url>https://imagej.net/User:Hinerm</url>
 			<roles><role>founder</role></roles>
 			<properties><id>hinerm</id></properties>
 		</contributor>
 		<contributor>
 			<name>Johannes Schindelin</name>
-			<url>http://imagej.net/User:Schindelin</url>
+			<url>https://imagej.net/User:Schindelin</url>
 			<properties><id>dscho</id></properties>
 		</contributor>
 		<contributor>
 			<name>Aivar Grislis</name>
-			<url>http://imagej.net/User:Grislis</url>
+			<url>https://imagej.net/User:Grislis</url>
 			<properties><id>grislis</id></properties>
 		</contributor>
 	</contributors>
@@ -66,7 +66,7 @@
 	<mailingLists>
 		<mailingList>
 			<name>Image.sc Forum</name>
-			<archive>https://forum.image.sc/</archive>
+			<archive>https://forum.image.sc/tags/scifio</archive>
 		</mailingList>
 	</mailingLists>
 
@@ -74,7 +74,7 @@
 		<connection>scm:git:git://github.com/scifio/scifio-lifesci</connection>
 		<developerConnection>scm:git:git@github.com:scifio/scifio-lifesci</developerConnection>
 		<tag>HEAD</tag>
-		<url>http://github.com/scifio/scifio-lifesci</url>
+		<url>https://github.com/scifio/scifio-lifesci</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
@@ -101,7 +101,7 @@
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
+			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
 	</repositories>
 
