@@ -224,7 +224,7 @@ public class SDTFormat extends AbstractFormat {
 		{
 			stream.setLittleEndian(true);
 
-			log().info("Reading SDT header");
+			log().debug("Reading SDT header");
 
 			// read file header information
 			final SDTInfo info = new SDTInfo(stream, meta.getTable());
