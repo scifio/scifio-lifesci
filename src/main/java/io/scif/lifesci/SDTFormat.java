@@ -38,12 +38,15 @@ import io.scif.img.axes.SCIFIOAxes;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipInputStream;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imglib2.Interval;
 
 import org.scijava.io.handle.DataHandle;
+import org.scijava.io.handle.DataHandleInputStream;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Bytes;
@@ -271,10 +274,12 @@ public class SDTFormat extends AbstractFormat {
 			final int sizeY = (int) m.get(imageIndex).getAxisLength(Axes.Y);
 			final int bpp = FormatTools.getBytesPerPixel(m.get(imageIndex)
 				.getPixelType());
+			// bytes per transient
+			final int bpt = bpp * m.getTimeBins();
 			final boolean little = m.get(imageIndex).isLittleEndian();
 
 			final int paddedWidth = sizeX + ((4 - (sizeX % 4)) % 4);
-			final int planeSize = paddedWidth * sizeY * m.getTimeBins() * bpp;
+			final int planeSize = paddedWidth * sizeY * bpt;
 
 			final int x = (int) bounds.min(m.get(imageIndex).getAxisIndex(Axes.X)), //
 					y = (int) bounds.min(m.get(imageIndex).getAxisIndex(Axes.Y)), //
@@ -284,7 +289,7 @@ public class SDTFormat extends AbstractFormat {
 			final boolean merge = m.mergeIntensity();
 			// Csarseven data has to read the entire image, so we may need to crop out
 			// the undesired region
-			byte[] b = !merge ? buf : new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+			byte[] b = !merge ? buf : new byte[sizeY * sizeX * bpt];
 
 			final SDTInfo info = m.getSDTInfo();
 
@@ -314,7 +319,7 @@ public class SDTFormat extends AbstractFormat {
 				int tmpOff = info.dataBlockOffs;
 				final boolean crop = x == 0 && y == 0 && w == sizeX && y == sizeY;
 				if (crop && !merge) {
-					b = new byte[sizeY * sizeX * m.getTimeBins() * bpp];
+					b = new byte[sizeY * sizeX * bpt];
 				}
 				// Data is stored by row, bottom row first
 				for (int row = h - 1; row >= 0; row--) {
@@ -324,11 +329,10 @@ public class SDTFormat extends AbstractFormat {
 						info.readBlockHeader(getHandle());
 						// Skip to the desired plane (channel)
 						// Assuming channels are interleaved
-						getHandle().skip(planeIndex * m.getTimeBins() * bpp);
+						getHandle().skip(planeIndex * bpt);
 						// Reads the current data block. Each data block contains all
 						// the time bins for a single pixel position.
-						getHandle().read(b, ((row * w) + col) * m.getTimeBins() * bpp, m
-							.getTimeBins() * bpp);
+						getHandle().read(b, ((row * w) + col) * bpt, bpt);
 						// Update offset to point to the next data block (pixel)
 						tmpOff = info.nextBlockOffs;
 					}
@@ -337,8 +341,8 @@ public class SDTFormat extends AbstractFormat {
 					// We always have to read the entire plane since we go from pixel to
 					// pixel, so now we can crop out what we didn't need.
 					for (int row = 0; row < h; row++) {
-						System.arraycopy(b, ((row * sizeX) + x) * bpp * m.getTimeBins(),
-							buf, row * w * bpp * m.getTimeBins(), w * m.getTimeBins() * bpp);
+						System.arraycopy(b, ((row * sizeX) + x) * bpt,
+							buf, row * w * bpt, w * bpt);
 					}
 				}
 			}
@@ -347,18 +351,28 @@ public class SDTFormat extends AbstractFormat {
 				// binOffset points to the start of the pixels, then we skip the
 				// required number of planes and rows.
 				getHandle().seek(m.getBinOffset() + planeIndex * planeSize + y *
-					paddedWidth * bpp * m.getTimeBins());
+					paddedWidth * bpt);
 			}
 
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
-				for (int row = 0; row < h; row++) {
-					getHandle().skipBytes(x * bpp * m.getTimeBins());
-					getHandle().read(b, row * bpp * m.getTimeBins() * w, w * m
-						.getTimeBins() * bpp);
-					getHandle().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				final InputStream is;
+				// compression detection
+				// see https://www.lfd.uci.edu/~gohlke/code/sdtfile.py.html
+				if ((info.blockType & 0x1000) != 0) {
+					is = new ZipInputStream(new DataHandleInputStream<>(getHandle()));
+					((ZipInputStream) is).getNextEntry();
 				}
+				else
+					is = new DataHandleInputStream<>(getHandle());
+
+				for (int row = 0; row < h; row++) {
+					is.skip(bpt * x);
+					readBytes(b, is, row * bpt * w, bpt * w);
+					is.skip(bpt * (paddedWidth - x - w));
+				}
+				is.close();
 			}
 
 			// no pixel merging required
@@ -367,10 +381,10 @@ public class SDTFormat extends AbstractFormat {
 			}
 
 			for (int row = 0; row < h; row++) {
-				final int yi = (y + row) * sizeX * m.getTimeBins() * bpp;
+				final int yi = (y + row) * sizeX * bpt;
 				final int ri = row * w * bpp;
 				for (int col = 0; col < w; col++) {
-					final int xi = yi + (x + col) * m.getTimeBins() * bpp;
+					final int xi = yi + (x + col) * bpt;
 					final int ci = ri + col * bpp;
 					// combine all lifetime bins into single intensity value
 					short sum = 0;
@@ -381,6 +395,27 @@ public class SDTFormat extends AbstractFormat {
 				}
 			}
 			return plane;
+		}
+
+		/**
+		 * Reads {@code nBytes} bytes from input stream {@code is} to {@code buf}
+		 * starting at {@code offset}.
+		 * 
+		 * @param buf the destination
+		 * @param is the source
+		 * @param offset the offset in {@code buf} to start writing
+		 * @param nBytes the number of bytes to read
+		 * @throws IOException see {@link InputStream#read(byte[], int, int)}
+		 */
+		private static void readBytes(final byte[] buf, final InputStream is,
+				final int offset, final int nBytes) throws IOException {
+			int nRead = 0;
+			while (nRead < nBytes) {
+				int n = is.read(buf, offset + nRead, nBytes - nRead);
+				if (n <= 0)
+					break;
+				nRead += n;
+			}
 		}
 	}
 }
