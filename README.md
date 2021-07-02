@@ -1,4 +1,4 @@
-[![](https://travis-ci.org/scifio/scifio-lifesci.svg?branch=master)](https://travis-ci.org/scifio/scifio-lifesci)
+[![](https://github.com/scifio/scifio-lifesci/actions/workflows/build-main.yml/badge.svg)](https://github.com/scifio/scifio-lifesci/actions/workflows/build-main.yml)
 
 scifio-lifesci
 ==============

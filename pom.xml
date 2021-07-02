@@ -81,8 +81,8 @@
 		<url>https://github.com/scifio/scifio-lifesci/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/scifio/scifio-lifesci</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/scifio/scifio-lifesci/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -95,7 +95,7 @@
 		<license.projectName>SCIFIO Life Sciences Extension</license.projectName>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
 		<scifio.version>0.38.0</scifio.version>
 	</properties>
