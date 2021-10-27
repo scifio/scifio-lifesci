@@ -15,7 +15,7 @@
 
 	<name>SCIFIO Life Sciences Extension</name>
 	<description>Provides SCIFIO support for proprietary life science formats.</description>
-	<url>https://imagej.net/SCIFIO_Life_Sciences_Extension</url>
+	<url>https://github.com/scifio/scifio-lifesci</url>
 	<inceptionYear>2013</inceptionYear>
 	<organization>
 		<name>SCIFIO</name>
