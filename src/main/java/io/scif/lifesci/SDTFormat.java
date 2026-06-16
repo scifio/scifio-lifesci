@@ -37,13 +37,19 @@ import io.scif.config.SCIFIOConfig;
 import io.scif.img.axes.SCIFIOAxes;
 import io.scif.util.FormatTools;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipInputStream;
+
+import org.scijava.io.handle.DataHandleInputStream;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imglib2.Interval;
 
+import org.scijava.io.handle.BytesHandle;
 import org.scijava.io.handle.DataHandle;
+import org.scijava.io.location.BytesLocation;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Bytes;
@@ -297,7 +303,6 @@ public class SDTFormat extends AbstractFormat {
 				getHandle().seek(tmpOff);
 				info.readBlockHeader(getHandle());
 				// Compute channel + block indices from the requested plane index.
-				final int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
 				final int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
 				// Seek to the data block for this plane index
 				for (int i = 0; i < blockIndex; i++) {
@@ -305,9 +310,6 @@ public class SDTFormat extends AbstractFormat {
 					getHandle().seek(tmpOff);
 					info.readBlockHeader(getHandle());
 				}
-				// Skip to the requested plane and row offset
-				getHandle().skip(channelIndex * planeSize + y * paddedWidth * bpp * m
-					.getTimeBins());
 			}
 			// Csarseven support
 			else if (info.noOfDataBlocks > 1) {
@@ -342,23 +344,40 @@ public class SDTFormat extends AbstractFormat {
 					}
 				}
 			}
-			// Standard offset
+			// Standard offset: seek to the block data start; plane/row offset is
+			// applied within the BytesHandle below.
 			else {
-				// binOffset points to the start of the pixels, then we skip the
-				// required number of planes and rows.
-				getHandle().seek(m.getBinOffset() + planeIndex * planeSize + y *
-					paddedWidth * bpp * m.getTimeBins());
+				getHandle().seek(info.dataOffs);
 			}
 
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
-				for (int row = 0; row < h; row++) {
-					getHandle().skipBytes(x * bpp * m.getTimeBins());
-					getHandle().read(b, row * bpp * m.getTimeBins() * w, w * m
-						.getTimeBins() * bpp);
-					getHandle().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				// obtain the data for the current block
+				byte[] bytes;
+				if (info.currentBlockZipped()) {
+					// data is compressed
+					bytes = decompressBlock(info.dataOffs);
+				} else {
+					bytes = new byte[(int) info.blockLength];
+					getHandle().read(bytes);
 				}
+				DataHandle<BytesLocation> handle = new BytesHandle(new BytesLocation(bytes));
+
+				// For FIFO, block navigation already chose the block; skip to the
+				// channel within it. For single-block, skip to the requested plane.
+				final long planeOff = info.measMode == 13
+					? (planeIndex % info.noOfDataBlocks) * (long) planeSize
+					: planeIndex * planeSize;
+				handle.skip(planeOff + y * paddedWidth * bpp * m.getTimeBins());
+				// read in the requested region
+				for (int row = 0; row < h; row++) {
+					handle.skipBytes(x * bpp * m.getTimeBins());
+					handle.read(b, row * bpp * m.getTimeBins() * w, w * m
+						.getTimeBins() * bpp);
+					handle.skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				}
+				handle.close();
 			}
 
 			// no pixel merging required
@@ -381,6 +400,27 @@ public class SDTFormat extends AbstractFormat {
 				}
 			}
 			return plane;
+		}
+
+		private byte[] decompressBlock(final long dataOffset) throws IOException {
+			getHandle().seek(dataOffset);
+			try (final ZipInputStream zis = new ZipInputStream(
+				new java.io.FilterInputStream(new DataHandleInputStream<>(getHandle()))
+				{
+
+					@Override
+					public void close() { /* prevent closing the underlying DataHandle */ }
+				}))
+			{
+				zis.getNextEntry();
+				final ByteArrayOutputStream out = new ByteArrayOutputStream();
+				final byte[] tmp = new byte[65536];
+				int n;
+				while ((n = zis.read(tmp)) > 0) {
+					out.write(tmp, 0, n);
+				}
+				return out.toByteArray();
+			}
 		}
 	}
 }
