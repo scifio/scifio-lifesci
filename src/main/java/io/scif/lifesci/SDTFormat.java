@@ -344,25 +344,19 @@ public class SDTFormat extends AbstractFormat {
 					}
 				}
 			}
-			// Standard offset: seek to the block data start; plane/row offset is
-			// applied within the BytesHandle below.
-			else {
-				getHandle().seek(info.dataOffs);
-			}
 
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
+				// Seek to the block data start
+				DataHandle<?> handle = getHandle();
+				handle.seek(info.dataOffs);
 				// obtain the data for the current block
-				byte[] bytes;
 				if (info.currentBlockZipped()) {
-					// data is compressed
-					bytes = decompressBlock(info.dataOffs);
-				} else {
-					bytes = new byte[(int) info.blockLength];
-					getHandle().read(bytes);
+					// data is compressed - we need to decompress it.
+					byte[] bytes = decompressBlock(handle);
+					handle = new BytesHandle(new BytesLocation(bytes));
 				}
-				DataHandle<BytesLocation> handle = new BytesHandle(new BytesLocation(bytes));
 
 				// For FIFO, block navigation already chose the block; skip to the
 				// channel within it. For single-block, skip to the requested plane.
@@ -377,7 +371,9 @@ public class SDTFormat extends AbstractFormat {
 						.getTimeBins() * bpp);
 					handle.skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 				}
-				handle.close();
+				if (info.currentBlockZipped()) {
+					handle.close();
+				}
 			}
 
 			// no pixel merging required
@@ -402,10 +398,9 @@ public class SDTFormat extends AbstractFormat {
 			return plane;
 		}
 
-		private byte[] decompressBlock(final long dataOffset) throws IOException {
-			getHandle().seek(dataOffset);
+		private static byte[] decompressBlock(DataHandle<?> handle) throws IOException {
 			try (final ZipInputStream zis = new ZipInputStream(
-				new java.io.FilterInputStream(new DataHandleInputStream<>(getHandle()))
+				new java.io.FilterInputStream(new DataHandleInputStream<>(handle))
 				{
 
 					@Override
