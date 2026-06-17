@@ -37,7 +37,6 @@ import io.scif.config.SCIFIOConfig;
 import io.scif.img.axes.SCIFIOAxes;
 import io.scif.util.FormatTools;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipInputStream;
 
@@ -410,14 +409,9 @@ public class SDTFormat extends AbstractFormat {
 				final java.util.zip.ZipEntry entry = zis.getNextEntry();
 				if (entry == null) {
 					throw new IOException(
-						"Missing ZIP entry in compressed SDT block at offset " + dataOffset);
+						"Missing ZIP entry in compressed SDT block");
 				}
-				final byte[] tmp = new byte[65536];
-				int n;
-				while ((n = zis.read(tmp)) > 0) {
-					out.write(tmp, 0, n);
-				}
-				return out.toByteArray();
+				return zis.readAllBytes();
 			}
 		}
 	}
