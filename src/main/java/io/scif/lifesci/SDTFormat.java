@@ -357,12 +357,19 @@ public class SDTFormat extends AbstractFormat {
 					handle = new BytesHandle(new BytesLocation(bytes));
 				}
 
-				// For FIFO, block navigation already chose the block; skip to the
-				// channel within it. For single-block, skip to the requested plane.
-				final long planeOff = info.measMode == 13
-					? (planeIndex % info.noOfDataBlocks) * (long) planeSize
-					: planeIndex * planeSize;
-				handle.skip(planeOff + y * paddedWidth * bpp * m.getTimeBins());
+				// skip to the requested plane
+				if (info.measMode == 13) {
+					// FIFO - skip to the requested plane within the current block
+					handle.skip((planeIndex % info.noOfDataBlocks) * (long) planeSize);
+				}
+				else {
+					// Single-block - skip to the requested plane
+					handle.skip(planeIndex * (long) planeSize);
+				}
+
+				// skip to the requested row
+				handle.skip(y * paddedWidth * bpp * m.getTimeBins());
+
 				// read in the requested region
 				for (int row = 0; row < h; row++) {
 					handle.skipBytes(x * bpp * m.getTimeBins());

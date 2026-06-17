@@ -52,9 +52,6 @@ public class SDTInfo {
 	public static final int FIFO_IMAGE_MODE = 13;
 
 	// Block type bit flags (bits 8-15 define data type and compression)
-	public static final int DATA_USHORT = 0x0;      // 16-bit unsigned short
-	public static final int DATA_ULONG = 0x100;     // 32-bit unsigned long
-	public static final int DATA_DBL = 0x200;       // 64-bit double
 	public static final int DATA_ZIPPED = 0x1000;   // data block is compressed
 
 	/** For .set files (setup only). */
