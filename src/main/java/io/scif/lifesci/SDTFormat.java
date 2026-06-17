@@ -407,8 +407,11 @@ public class SDTFormat extends AbstractFormat {
 					public void close() { /* prevent closing the underlying DataHandle */ }
 				}))
 			{
-				zis.getNextEntry();
-				final ByteArrayOutputStream out = new ByteArrayOutputStream();
+				final java.util.zip.ZipEntry entry = zis.getNextEntry();
+				if (entry == null) {
+					throw new IOException(
+						"Missing ZIP entry in compressed SDT block at offset " + dataOffset);
+				}
 				final byte[] tmp = new byte[65536];
 				int n;
 				while ((n = zis.read(tmp)) > 0) {
