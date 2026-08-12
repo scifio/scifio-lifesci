@@ -38,12 +38,17 @@ import io.scif.img.axes.SCIFIOAxes;
 import io.scif.util.FormatTools;
 
 import java.io.IOException;
+import java.util.zip.ZipInputStream;
+
+import org.scijava.io.handle.DataHandleInputStream;
 
 import net.imagej.axis.Axes;
 import net.imagej.axis.CalibratedAxis;
 import net.imglib2.Interval;
 
+import org.scijava.io.handle.BytesHandle;
 import org.scijava.io.handle.DataHandle;
+import org.scijava.io.location.BytesLocation;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Bytes;
@@ -54,6 +59,7 @@ import org.scijava.util.Bytes;
  * 
  * @author Curtis Rueden
  * @author Mark Hiner
+ * @author Gabriel Selzer
  */
 @Plugin(type = Format.class)
 public class SDTFormat extends AbstractFormat {
@@ -297,7 +303,6 @@ public class SDTFormat extends AbstractFormat {
 				getHandle().seek(tmpOff);
 				info.readBlockHeader(getHandle());
 				// Compute channel + block indices from the requested plane index.
-				final int channelIndex = (int) (planeIndex % info.noOfDataBlocks);
 				final int blockIndex = (int) (planeIndex / info.noOfDataBlocks);
 				// Seek to the data block for this plane index
 				for (int i = 0; i < blockIndex; i++) {
@@ -305,9 +310,6 @@ public class SDTFormat extends AbstractFormat {
 					getHandle().seek(tmpOff);
 					info.readBlockHeader(getHandle());
 				}
-				// Skip to the requested plane and row offset
-				getHandle().skip(channelIndex * planeSize + y * paddedWidth * bpp * m
-					.getTimeBins());
 			}
 			// Csarseven support
 			else if (info.noOfDataBlocks > 1) {
@@ -342,23 +344,55 @@ public class SDTFormat extends AbstractFormat {
 					}
 				}
 			}
-			// Standard offset
-			else {
-				// binOffset points to the start of the pixels, then we skip the
-				// required number of planes and rows.
-				getHandle().seek(m.getBinOffset() + planeIndex * planeSize + y *
-					paddedWidth * bpp * m.getTimeBins());
-			}
 
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
-				for (int row = 0; row < h; row++) {
-					getHandle().skipBytes(x * bpp * m.getTimeBins());
-					getHandle().read(b, row * bpp * m.getTimeBins() * w, w * m
-						.getTimeBins() * bpp);
-					getHandle().skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				// Seek to the block data start.
+				final DataHandle<?> sourceHandle = getHandle();
+				sourceHandle.seek(info.dataOffs);
+
+				// Obtain the data for the current block.
+				final DataHandle<?> handle;
+				final BytesHandle zipHandle;
+				if (info.currentBlockZipped()) {
+					// Data is compressed - we need to decompress it.
+					byte[] bytes = decompressBlock(sourceHandle);
+					// Now read the plane from the decompressed bytes.
+					handle = zipHandle = new BytesHandle(new BytesLocation(bytes));
 				}
+				else {
+					// Read the plane directly from the source handle.
+					handle = sourceHandle;
+					zipHandle = null;
+				}
+
+				// Skip to the requested plane.
+				if (info.measMode == 13) {
+					// FIFO - skip to the requested plane within the current block.
+					handle.skip((planeIndex % info.noOfDataBlocks) * (long) planeSize);
+				}
+				else {
+					// Single-block - skip to the requested plane.
+					handle.skip(planeIndex * (long) planeSize);
+				}
+
+				// Skip to the requested row.
+				handle.skip(y * paddedWidth * bpp * m.getTimeBins());
+
+				// Read in the requested region.
+				for (int row = 0; row < h; row++) {
+					handle.skipBytes(x * bpp * m.getTimeBins());
+					handle.read(b, row * bpp * m.getTimeBins() * w, w * m
+						.getTimeBins() * bpp);
+					handle.skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
+				}
+
+				// Clean up the temporary zip handle, if there is one.
+				// This is a no-op for BytesHandle, but closing it here is more correct --
+				// if the underlying code or handle type ever changes, we avoid a future
+				// action-at-a-distance bug waiting to happen.
+				if (zipHandle != null) zipHandle.close();
 			}
 
 			// no pixel merging required
@@ -381,6 +415,24 @@ public class SDTFormat extends AbstractFormat {
 				}
 			}
 			return plane;
+		}
+
+		private static byte[] decompressBlock(DataHandle<?> handle) throws IOException {
+			try (final ZipInputStream zis = new ZipInputStream(
+				new java.io.FilterInputStream(new DataHandleInputStream<>(handle))
+				{
+
+					@Override
+					public void close() { /* prevent closing the underlying DataHandle */ }
+				}))
+			{
+				final java.util.zip.ZipEntry entry = zis.getNextEntry();
+				if (entry == null) {
+					throw new IOException(
+						"Missing ZIP entry in compressed SDT block");
+				}
+				return zis.readAllBytes();
+			}
 		}
 	}
 }
