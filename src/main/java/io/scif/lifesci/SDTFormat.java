@@ -59,6 +59,7 @@ import org.scijava.util.Bytes;
  * 
  * @author Curtis Rueden
  * @author Mark Hiner
+ * @author Gabriel Selzer
  */
 @Plugin(type = Format.class)
 public class SDTFormat extends AbstractFormat {
@@ -347,39 +348,51 @@ public class SDTFormat extends AbstractFormat {
 			// For the SDT subtypes with complete planes per data block, we can read
 			// the requested plane data now.
 			if (info.measMode == 13 || info.noOfDataBlocks == 1) {
-				// Seek to the block data start
-				DataHandle<?> handle = getHandle();
-				handle.seek(info.dataOffs);
-				// obtain the data for the current block
+				// Seek to the block data start.
+				final DataHandle<?> sourceHandle = getHandle();
+				sourceHandle.seek(info.dataOffs);
+
+				// Obtain the data for the current block.
+				final DataHandle<?> handle;
+				final BytesHandle zipHandle;
 				if (info.currentBlockZipped()) {
-					// data is compressed - we need to decompress it.
-					byte[] bytes = decompressBlock(handle);
-					handle = new BytesHandle(new BytesLocation(bytes));
+					// Data is compressed - we need to decompress it.
+					byte[] bytes = decompressBlock(sourceHandle);
+					// Now read the plane from the decompressed bytes.
+					handle = zipHandle = new BytesHandle(new BytesLocation(bytes));
+				}
+				else {
+					// Read the plane directly from the source handle.
+					handle = sourceHandle;
+					zipHandle = null;
 				}
 
-				// skip to the requested plane
+				// Skip to the requested plane.
 				if (info.measMode == 13) {
-					// FIFO - skip to the requested plane within the current block
+					// FIFO - skip to the requested plane within the current block.
 					handle.skip((planeIndex % info.noOfDataBlocks) * (long) planeSize);
 				}
 				else {
-					// Single-block - skip to the requested plane
+					// Single-block - skip to the requested plane.
 					handle.skip(planeIndex * (long) planeSize);
 				}
 
-				// skip to the requested row
+				// Skip to the requested row.
 				handle.skip(y * paddedWidth * bpp * m.getTimeBins());
 
-				// read in the requested region
+				// Read in the requested region.
 				for (int row = 0; row < h; row++) {
 					handle.skipBytes(x * bpp * m.getTimeBins());
 					handle.read(b, row * bpp * m.getTimeBins() * w, w * m
 						.getTimeBins() * bpp);
 					handle.skipBytes(bpp * m.getTimeBins() * (paddedWidth - x - w));
 				}
-				if (info.currentBlockZipped()) {
-					handle.close();
-				}
+
+				// Clean up the temporary zip handle, if there is one.
+				// This is a no-op for BytesHandle, but closing it here is more correct --
+				// if the underlying code or handle type ever changes, we avoid a future
+				// action-at-a-distance bug waiting to happen.
+				if (zipHandle != null) zipHandle.close();
 			}
 
 			// no pixel merging required
